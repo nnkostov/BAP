@@ -136,7 +136,7 @@ namespace LegoTrainProject
 						statusButton == GattCommunicationStatus.Success &&
 						statusBattery == GattCommunicationStatus.Success)
 					{
-						Thread.Sleep(1000);
+						await Task.Delay(1000).ConfigureAwait(false);
 
 						InitializeNotifications();
 						IsConnected = true;

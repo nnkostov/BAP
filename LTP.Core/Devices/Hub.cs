@@ -21,6 +21,12 @@ namespace LegoTrainProject
         [NonSerialized]
         private bool _disposed = false;
 
+        /// <summary>
+        /// Semaphore for synchronizing Bluetooth write operations.
+        /// </summary>
+        [NonSerialized]
+        private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
+
         // List of Services
         [NonSerialized]
         internal GattDeviceServicesResult Gatt;
@@ -331,7 +337,7 @@ namespace LegoTrainProject
 				// If it succeeded
 				if (Characteristic != null)
                 {
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000).ConfigureAwait(false);
 
 					// Immediately attach to get all data from the Hub
 					Characteristic.ValueChanged += Characteristic_ValueChanged;
@@ -682,15 +688,30 @@ namespace LegoTrainProject
             WriteMessage(message, true);
         }
 
-            /// <summary>
-            /// Send the message to the proper device and characteristic
-            /// </summary>
-            /// <param name="message"></param>
+        /// <summary>
+        /// Send the message to the proper device and characteristic.
+        /// Thread-safe: uses semaphore to ensure only one write at a time.
+        /// </summary>
+        /// <param name="message">The message bytes to send</param>
+        /// <param name="addLength">Whether to prepend length header</param>
         protected virtual async void WriteMessage(byte[] message, bool addLength)
         {
+            if (Characteristic == null || _disposed)
+                return;
+
+            bool lockAcquired = false;
             try
             {
-                if (Characteristic != null)
+                // Wait for exclusive access to write (with timeout to prevent deadlock)
+                lockAcquired = await _writeLock.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+                if (!lockAcquired)
+                {
+                    MainBoard.WriteLine($"{Name}: Bluetooth write timeout", Color.Orange);
+                    return;
+                }
+
+                if (Characteristic != null && !_disposed)
                 {
                     using (DataWriter writer = new DataWriter())
                     {
@@ -701,13 +722,21 @@ namespace LegoTrainProject
                     }
                 }
             }
-            catch
+            catch (ObjectDisposedException)
             {
-				MainBoard.WriteLine($"{Name} lost bluetooth connection", Color.Red);
+                // Device was disposed during write - ignore
+            }
+            catch (Exception ex)
+            {
+				MainBoard.WriteLine($"{Name} lost bluetooth connection: {ex.Message}", Color.Red);
 				Dispose();
-
 				OnDataUpdated();
 			}
+            finally
+            {
+                if (lockAcquired)
+                    _writeLock.Release();
+            }
         }
 
 		public virtual void Disconnect()
@@ -807,19 +836,36 @@ namespace LegoTrainProject
 
 
         /// <summary>
-        /// Set Motor Speed for this train
+        /// Set Motor Speed for this train.
         /// </summary>
-        /// <param name="port"></param>
-        /// <param name="speed"></param>
+        /// <param name="port">The port identifier (A, B, C, D, or AB for combined)</param>
+        /// <param name="speed">Speed value from -100 to 100. Values outside this range will be clamped.</param>
         public virtual void SetMotorSpeed(string port, int speed)
         {
+            // Validate and clamp speed to valid range
+            if (speed > 100)
+            {
+                speed = 100;
+            }
+            else if (speed < -100)
+            {
+                speed = -100;
+            }
+
+            // Validate port parameter
+            if (string.IsNullOrEmpty(port))
+            {
+                MainBoard.WriteLine($"ERROR: {Name} - Port name cannot be null or empty", Color.Red);
+                return;
+            }
+
             byte[] message;
             Port portObj = GetPortFromPortId(port);
 
             // If we can't find the port, we can't do anything!
             if (portObj == null)
             {
-                MainBoard.WriteLine("Could not set Motor Speed to " + speed + " for " + Name + " because no default port are setup", Color.Red);
+                MainBoard.WriteLine($"ERROR: {Name} - Port '{port}' not found. Could not set speed to {speed}", Color.Red);
                 return;
             }
 
@@ -900,18 +946,40 @@ namespace LegoTrainProject
 		}
 
 		/// <summary>
-		/// Automatically accelerate or decelerate a train
+		/// Automatically accelerate or decelerate a motor from one speed to another over time.
 		/// </summary>
-		/// <param name="port"></param>
-		/// <param name="fromSpeed"></param>
-		/// <param name="toSpeed"></param>
-		/// <param name="timeinms"></param>
+		/// <param name="port">The port identifier</param>
+		/// <param name="fromSpeed">Starting speed (-100 to 100)</param>
+		/// <param name="toSpeed">Target speed (-100 to 100)</param>
+		/// <param name="timeinms">Duration of ramp in milliseconds (must be positive)</param>
 		public void RampMotorSpeed(string port, int fromSpeed, int toSpeed, int timeinms)
         {
+			// Validate parameters
+			if (string.IsNullOrEmpty(port))
+			{
+				MainBoard.WriteLine($"ERROR: {Name} - Port name cannot be null or empty", Color.Red);
+				return;
+			}
+
+			// Clamp speed values
+			fromSpeed = Math.Max(-100, Math.Min(100, fromSpeed));
+			toSpeed = Math.Max(-100, Math.Min(100, toSpeed));
+
+			// Validate time
+			if (timeinms <= 0)
+			{
+				// If no time specified, just set the target speed directly
+				SetMotorSpeed(port, toSpeed);
+				return;
+			}
+
 			Port p = GetPortFromPortId(port);
 
 			if (p == null)
+			{
+				MainBoard.WriteLine($"ERROR: {Name} - Port '{port}' not found", Color.Red);
 				return;
+			}
 
 			if (p.MotorTimer != null)
             {
@@ -920,6 +988,9 @@ namespace LegoTrainProject
             }
 
             double steps = Math.Abs(toSpeed - fromSpeed);
+			if (steps == 0)
+				return; // Nothing to do
+
             double delay = timeinms / steps;
             double increment = 1;
             if (delay < 50 && steps > 0)
@@ -984,7 +1055,18 @@ namespace LegoTrainProject
 
 		public void ActivateSwitch(string port, bool left)
         {
+			// Fire and forget - starts the async operation without blocking
+			_ = ActivateSwitchAsync(port, left);
+		}
+
+		/// <summary>
+		/// Activates a switch asynchronously using proper async/await pattern.
+		/// </summary>
+		public async Task ActivateSwitchAsync(string port, bool left)
+		{
 			Port targetPort = GetPortFromPortId(port);
+			if (targetPort == null)
+				return;
 
 			switch (targetPort.Function)
 			{
@@ -993,31 +1075,17 @@ namespace LegoTrainProject
 						targetPort.TargetSpeed = (left) ? -100 : 100;
 						SetMotorSpeed(port, targetPort.TargetSpeed);
 
-						System.Timers.Timer timer = new System.Timers.Timer(700);
-						timer.Elapsed += (object sender, ElapsedEventArgs ev) =>
-						{
-							// Stop it after 700ms 
-							timer.Stop();
-							Stop(port);
+						// First activation: run for 700ms
+						await Task.Delay(700).ConfigureAwait(false);
+						Stop(port);
 
-							timer = new System.Timers.Timer(200);
-							timer.Elapsed += (object sender2, ElapsedEventArgs ev2) =>
-							{
-								timer.Stop();
+						// Brief pause
+						await Task.Delay(200).ConfigureAwait(false);
 
-								SetMotorSpeed(port, targetPort.TargetSpeed);
-								timer = new System.Timers.Timer(700);
-								timer.Elapsed += (object sender3, ElapsedEventArgs ev3) =>
-								{									
-									timer.Stop();
-									timer.Dispose();
-									Stop(port);
-								};
-								timer.Start();
-							};
-							timer.Start();
-						};
-						timer.Start();
+						// Second activation: run for 700ms
+						SetMotorSpeed(port, targetPort.TargetSpeed);
+						await Task.Delay(700).ConfigureAwait(false);
+						Stop(port);
 						break;
 					}
 				case Port.Functions.SWITCH_STANDARD:
@@ -1025,14 +1093,9 @@ namespace LegoTrainProject
 						targetPort.TargetSpeed = (left) ? -100 : 100;
 						SetMotorSpeed(port, targetPort.TargetSpeed);
 
-						System.Timers.Timer timer = new System.Timers.Timer(500);
-						timer.Elapsed += (object sender, ElapsedEventArgs ev) =>
-						{
-							// Stop it after 700ms 
-							timer.Stop();
-							Stop(port, true);
-						};
-						timer.Start();
+						// Run for 500ms then stop
+						await Task.Delay(500).ConfigureAwait(false);
+						Stop(port, true);
 						break;
 					}
 				case Port.Functions.SWITCH_TRIXBRIX:
@@ -1040,14 +1103,9 @@ namespace LegoTrainProject
 						targetPort.TargetSpeed = (left) ? -40 : 40;
 						SetMotorSpeed(port, targetPort.TargetSpeed);
 
-						System.Timers.Timer timer = new System.Timers.Timer(500);
-						timer.Elapsed += (object sender, ElapsedEventArgs ev) =>
-						{
-							// Stop it after 700ms 
-							timer.Stop();
-							Stop(port);
-						};
-						timer.Start();
+						// Run for 500ms then stop
+						await Task.Delay(500).ConfigureAwait(false);
+						Stop(port);
 						break;
 					}
 			}

@@ -115,6 +115,7 @@
       <DependentUpon>FormWelcome.cs</DependentUpon>
     </Compile>
     <Compile Include="LTP.Core\Constants\BluetoothConstants.cs" />
+    <Compile Include="LTP.Core\Exceptions\BapExceptions.cs" />
     <Compile Include="LTP.Core\Logging\ILogger.cs" />
     <Compile Include="LTP.Core\Path.cs" />
     <Compile Include="LTP.Desktop\Program\ToolStripProgram.cs">
