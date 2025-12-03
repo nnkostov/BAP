@@ -179,5 +179,24 @@ namespace LegoTrainProject
 
 			WriteMessage(data, false);
 		}
+
+		/// <summary>
+		/// Disposes resources specific to BuWizzHub.
+		/// </summary>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				if (pingTimer != null)
+				{
+					pingTimer.Stop();
+					pingTimer.Elapsed -= PingTimer_Elapsed;
+					pingTimer.Dispose();
+					pingTimer = null;
+				}
+			}
+
+			base.Dispose(disposing);
+		}
 	}
 }

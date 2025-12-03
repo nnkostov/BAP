@@ -323,5 +323,24 @@ namespace LegoTrainProject
 			portObj.Speed = brightness;
 			WriteMessage(new byte[] { 0x01, (byte)portObj.Value, 1, (byte)(portObj.Speed * 2.5) }, CharacteristicCommands);
 		}
+
+		/// <summary>
+		/// Disposes resources specific to SbrickHub.
+		/// </summary>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				if (pingTimer != null)
+				{
+					pingTimer.Stop();
+					pingTimer.Elapsed -= PingTimer_Elapsed;
+					pingTimer.Dispose();
+					pingTimer = null;
+				}
+			}
+
+			base.Dispose(disposing);
+		}
 	}
 }
