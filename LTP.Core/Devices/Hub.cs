@@ -789,6 +789,9 @@ namespace LegoTrainProject
                     Device = null;
                 }
 
+                // Dispose of write lock semaphore
+                _writeLock?.Dispose();
+
                 // Clear GATT resources
                 Gatt = null;
                 AllCharacteristic = null;
