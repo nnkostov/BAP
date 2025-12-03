@@ -76,7 +76,7 @@ namespace LegoTrainProject
 				h.SpeedCoefficient = (h.SpeedCoefficient == 0) ? 1.0f : h.SpeedCoefficient;
 				h.SpeedWhenAboutToStop = (h.SpeedWhenAboutToStop == 0) ? 40 : h.SpeedWhenAboutToStop;
 
-				foreach (Port p in h.RegistredPorts)
+				foreach (Port p in h.RegisteredPorts)
 				{
 					if (p.Function != Port.Functions.TRAIN_MOTOR)
 						continue;

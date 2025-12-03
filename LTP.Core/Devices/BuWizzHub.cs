@@ -39,17 +39,17 @@ namespace LegoTrainProject
 		public override void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			Port portA = new Port("A", 0, true);
 			Port portB = new Port("B", 2, true);
 			Port portC = new Port("C", 1, true);
 			Port portD = new Port("D", 3, true);
 
-			RegistredPorts.Add(portA);
-			RegistredPorts.Add(portB);
-			RegistredPorts.Add(portC);
-			RegistredPorts.Add(portD);
+			RegisteredPorts.Add(portA);
+			RegisteredPorts.Add(portB);
+			RegisteredPorts.Add(portC);
+			RegisteredPorts.Add(portD);
 
 			portA.Function = Port.Functions.MOTOR;
 			portB.Function = Port.Functions.MOTOR;
@@ -148,8 +148,8 @@ namespace LegoTrainProject
 
 			byte[] data = new byte[6];
 			data[0] = 0x10;
-			foreach (Port p in RegistredPorts)
-				data[RegistredPorts.IndexOf(p) + 1] = (byte)p.Speed;
+			foreach (Port p in RegisteredPorts)
+				data[RegisteredPorts.IndexOf(p) + 1] = (byte)p.Speed;
 			data[5] = 0;
 
 			WriteMessage(data, false);
@@ -173,8 +173,8 @@ namespace LegoTrainProject
 
 			byte[] data = new byte[6];
 			data[0] = 0x10;
-			foreach (Port p in RegistredPorts)
-				data[RegistredPorts.IndexOf(p) + 1] = (byte)p.Speed;
+			foreach (Port p in RegisteredPorts)
+				data[RegisteredPorts.IndexOf(p) + 1] = (byte)p.Speed;
 			data[5] = 0;
 
 			WriteMessage(data, false);

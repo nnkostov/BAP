@@ -392,7 +392,7 @@ namespace LegoTrainProject
 			tsp.toolStripButtonAddSensor.Tag = new object[] { page, panel, EventType.Sensor_Triggered };
 
 			tsp.toolStripButtonAddSequence.Click += AddEventButton_Click;
-			tsp.toolStripButtonAddSequence.Tag = new object[] { page, panel, EventType.User_Triggerd };
+			tsp.toolStripButtonAddSequence.Tag = new object[] { page, panel, EventType.User_Triggered };
 
 			tsp.toolStripButtonDelete.Click += DeleteProgramButton_Click;
 			tsp.toolStripButtonDelete.Tag = new object[] { page, newProgram }; 
@@ -557,7 +557,7 @@ namespace LegoTrainProject
             label.Padding = new Padding(4, 6, 0, 0);
             label.Text = "Sensor Event #" + (program.Events.IndexOf(newEvent) + 1);
 
-            if (newEvent.Type == EventType.User_Triggerd)
+            if (newEvent.Type == EventType.User_Triggered)
             {
                 label.Text = (newEvent.Name == null) ? "Sequence #" + (program.Events.IndexOf(newEvent) + 1) : newEvent.Name; 
 
@@ -865,7 +865,7 @@ namespace LegoTrainProject
 			FormCodeEditor codeForm = new FormCodeEditor(trainEvent, currentProject, false);
             codeForm.Show();
 
-			if (trainEvent.Type == EventType.User_Triggerd)
+			if (trainEvent.Type == EventType.User_Triggered)
 				label.Text = (trainEvent.Name == null) ? "Sequence #" + (program.Events.IndexOf(trainEvent) + 1) : trainEvent.Name;
 		}
 
@@ -1285,20 +1285,20 @@ namespace LegoTrainProject
 								train.LEDColor = newProject.RegisteredTrains[i].LEDColor;
 								train.RestoreLEDColor();
 
-								for (int j = 0; j < train.RegistredPorts.Count; j++)
+								for (int j = 0; j < train.RegisteredPorts.Count; j++)
 								{
 									// We save the function
-									train.RegistredPorts[j].Function = newProject.RegisteredTrains[i].RegistredPorts[j].Function;
+									train.RegisteredPorts[j].Function = newProject.RegisteredTrains[i].RegisteredPorts[j].Function;
 									// If it is a Switch, we set it up on the left
-									if (train.RegistredPorts[j].Function == Port.Functions.SWITCH_DOUBLECROSS ||
-										train.RegistredPorts[j].Function == Port.Functions.SWITCH_STANDARD ||
-										train.RegistredPorts[j].Function == Port.Functions.SWITCH_TRIXBRIX)
-										train.ActivateSwitchToLeft(train.RegistredPorts[j].Id);
+									if (train.RegisteredPorts[j].Function == Port.Functions.SWITCH_DOUBLECROSS ||
+										train.RegisteredPorts[j].Function == Port.Functions.SWITCH_STANDARD ||
+										train.RegisteredPorts[j].Function == Port.Functions.SWITCH_TRIXBRIX)
+										train.ActivateSwitchToLeft(train.RegisteredPorts[j].Id);
 									else
-										train.Stop(train.RegistredPorts[j].Id);
+										train.Stop(train.RegisteredPorts[j].Id);
 
-									train.RegistredPorts[j].MinDistance = 0;
-									train.RegistredPorts[j].MaxDistance = 0;
+									train.RegisteredPorts[j].MinDistance = 0;
+									train.RegisteredPorts[j].MaxDistance = 0;
 								}
 
 								// Override the train with the current one, already connected

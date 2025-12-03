@@ -45,7 +45,7 @@ namespace LegoTrainProject
 		public override void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			Port portA = new Port("A", 0, true);
 			Port portB = new Port("B", 1, true);
@@ -57,15 +57,15 @@ namespace LegoTrainProject
 			Port port3 = new Port("Three", 6, true);
 			Port port4 = new Port("Four", 7, true);
 
-			RegistredPorts.Add(portA);
-			RegistredPorts.Add(portB);
-			RegistredPorts.Add(portC);
-			RegistredPorts.Add(portD);
+			RegisteredPorts.Add(portA);
+			RegisteredPorts.Add(portB);
+			RegisteredPorts.Add(portC);
+			RegisteredPorts.Add(portD);
 
-			RegistredPorts.Add(port1);
-			RegistredPorts.Add(port2);
-			RegistredPorts.Add(port3);
-			RegistredPorts.Add(port4);
+			RegisteredPorts.Add(port1);
+			RegisteredPorts.Add(port2);
+			RegisteredPorts.Add(port3);
+			RegisteredPorts.Add(port4);
 		}
 
 		public void TryToConnect()

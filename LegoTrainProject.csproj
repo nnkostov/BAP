@@ -58,6 +58,9 @@
     <Reference Include="FastColoredTextBox, Version=2.16.24.0, Culture=neutral, PublicKeyToken=fb8aa12b994ef61b, processorArchitecture=MSIL">
       <HintPath>packages\FCTB.2.16.24\lib\FastColoredTextBox.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -111,6 +114,8 @@
     <Compile Include="LTP.Desktop\Main UI\FormWelcome.Designer.cs">
       <DependentUpon>FormWelcome.cs</DependentUpon>
     </Compile>
+    <Compile Include="LTP.Core\Constants\BluetoothConstants.cs" />
+    <Compile Include="LTP.Core\Logging\ILogger.cs" />
     <Compile Include="LTP.Core\Path.cs" />
     <Compile Include="LTP.Desktop\Program\ToolStripProgram.cs">
       <SubType>UserControl</SubType>
@@ -163,6 +168,7 @@
       <DependentUpon>HubEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="LTP.Core\Devices\SbrickHub.cs" />
+    <Compile Include="LTP.Core\ProjectSerializer.cs" />
     <Compile Include="LTP.Core\TrainProject.cs" />
     <Compile Include="LTP.Desktop\Main UI\FormCodeEditor.cs">
       <SubType>Form</SubType>

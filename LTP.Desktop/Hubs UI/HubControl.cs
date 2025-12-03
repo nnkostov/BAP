@@ -37,7 +37,7 @@ namespace LegoTrainProject
 		{
 			int width = 0;
 
-			foreach (Port p in Hub.RegistredPorts)
+			foreach (Port p in Hub.RegisteredPorts)
 			{
 				switch (p.Function)
 				{
@@ -355,7 +355,7 @@ namespace LegoTrainProject
 			}
 			else
 			{
-				foreach (Port p in Hub.RegistredPorts)
+				foreach (Port p in Hub.RegisteredPorts)
 					// Update the speed on the trackbar for this train if necessary
 					if (p.label != null)
 					{

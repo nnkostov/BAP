@@ -16,8 +16,11 @@ using System.Threading.Tasks;
 namespace LegoTrainProject
 {
     [Serializable]
-    public class Hub
+    public class Hub : IDisposable
     {
+        [NonSerialized]
+        private bool _disposed = false;
+
         // List of Services
         [NonSerialized]
         internal GattDeviceServicesResult Gatt;
@@ -82,7 +85,7 @@ namespace LegoTrainProject
         /// <summary>
         /// List of all Ports Connected
         /// </summary>
-        public List<Port> RegistredPorts = new List<Port>();
+        public List<Port> RegisteredPorts = new List<Port>();
 
 		/// <summary>
 		/// 
@@ -170,7 +173,7 @@ namespace LegoTrainProject
 
 		internal bool IsTrain()
 		{
-			foreach (Port p in RegistredPorts)
+			foreach (Port p in RegisteredPorts)
 				if (p.Function == Functions.TRAIN_MOTOR)
 					return true;
 
@@ -244,7 +247,7 @@ namespace LegoTrainProject
 		public virtual void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			if (Type == Types.BOOST_MOVE_HUB)
 			{
@@ -269,17 +272,17 @@ namespace LegoTrainProject
 				Port portC = new Port("C", 1, true);
 				Port portD = new Port("D", 2, true);
 
-				RegistredPorts.Add(portA);
-				RegistredPorts.Add(portB);
-				RegistredPorts.Add(portC);
-				RegistredPorts.Add(portD);
+				RegisteredPorts.Add(portA);
+				RegisteredPorts.Add(portB);
+				RegisteredPorts.Add(portC);
+				RegisteredPorts.Add(portD);
 			}
 			else
 			{
-				RegistredPorts.Add(new Port("A", 0));
-				RegistredPorts.Add(new Port("B", 1));
-				RegistredPorts.Add(new Port("C", 2));
-				RegistredPorts.Add(new Port("D", 3));
+				RegisteredPorts.Add(new Port("A", 0));
+				RegisteredPorts.Add(new Port("B", 1));
+				RegisteredPorts.Add(new Port("C", 2));
+				RegisteredPorts.Add(new Port("D", 3));
 			}
 		}
 
@@ -486,10 +489,10 @@ namespace LegoTrainProject
 
 		private void UpdateBoostMovePortToLatestFirmware()
 		{
-			RegistredPorts[0].Value = 0;
-			RegistredPorts[1].Value = 1;
-			RegistredPorts[2].Value = 2;
-			RegistredPorts[3].Value = 3;
+			RegisteredPorts[0].Value = 0;
+			RegisteredPorts[1].Value = 1;
+			RegisteredPorts[2].Value = 2;
+			RegisteredPorts[3].Value = 3;
 		}
 
 		private void ParsePortMessage(byte [] data)
@@ -713,23 +716,71 @@ namespace LegoTrainProject
 				WriteMessage(new byte[] { 0x02, 0x01 });
 		}
 
+        /// <summary>
+        /// Releases all resources used by this Hub.
+        /// </summary>
         public void Dispose()
         {
-			Disconnect();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            Gatt = null;
-            AllCharacteristic = null;
-            Characteristic = null;
+        /// <summary>
+        /// Releases unmanaged and optionally managed resources.
+        /// </summary>
+        /// <param name="disposing">True to release both managed and unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
 
-            if (Device != null)
-                Device.Dispose();
+            if (disposing)
+            {
+                // Disconnect the hub gracefully
+                Disconnect();
 
-            Device = null;
-			IsConnected = false;
+                // Dispose of all port timers
+                if (RegisteredPorts != null)
+                {
+                    foreach (var port in RegisteredPorts)
+                    {
+                        if (port.MotorTimer != null)
+                        {
+                            port.MotorTimer.Stop();
+                            port.MotorTimer.Dispose();
+                            port.MotorTimer = null;
+                        }
+                    }
+                }
 
-			// Finally, we clear this device to welcome new Advertisements
-			MainBoard.registeredBluetoothDevices.RemoveAll(s => s == BluetoothAddress);
-		}
+                // Dispose of Bluetooth device
+                if (Device != null)
+                {
+                    Device.Dispose();
+                    Device = null;
+                }
+
+                // Clear GATT resources
+                Gatt = null;
+                AllCharacteristic = null;
+                Characteristic = null;
+
+                IsConnected = false;
+
+                // Remove from registered devices
+                MainBoard.registeredBluetoothDevices?.RemoveAll(s => s == BluetoothAddress);
+            }
+
+            _disposed = true;
+        }
+
+        /// <summary>
+        /// Finalizer to ensure resources are released.
+        /// </summary>
+        ~Hub()
+        {
+            Dispose(false);
+        }
 
 
 
@@ -1004,7 +1055,7 @@ namespace LegoTrainProject
 
         public void Stop()
         {
-			foreach (Port p in RegistredPorts)
+			foreach (Port p in RegisteredPorts)
 				if (p.Speed != 0)
 					Stop(p.Id, true);
         }
@@ -1322,7 +1373,7 @@ namespace LegoTrainProject
 
 		public Port GetPortFromPortId(string name)
         {
-            foreach (Port port in RegistredPorts)
+            foreach (Port port in RegisteredPorts)
             {
                 if (port.Id == name)
                     return port;
@@ -1333,7 +1384,7 @@ namespace LegoTrainProject
 
         protected Port GetPortFromPortNumber(int number)
         {
-            foreach (Port port in RegistredPorts)
+            foreach (Port port in RegisteredPorts)
             {
                 if (port.Value == number)
                     return port;

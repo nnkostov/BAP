@@ -19,13 +19,13 @@ namespace LegoTrainProject
 		public override void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			Port portA = new Port("A", 0, true);
 			Port portB = new Port("B", 1, true);
 
-			RegistredPorts.Add(portA);
-			RegistredPorts.Add(portB);
+			RegisteredPorts.Add(portA);
+			RegisteredPorts.Add(portB);
 
 			portA.Function = Port.Functions.BUTTON;
 			portB.Function = Port.Functions.BUTTON;

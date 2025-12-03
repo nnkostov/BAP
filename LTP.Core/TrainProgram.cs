@@ -23,7 +23,7 @@ namespace LegoTrainProject
         public enum EventType
         {
             Sensor_Triggered = 0,
-            User_Triggerd = 1,
+            User_Triggered = 1,
 			Global_Code = 2
 		}
 

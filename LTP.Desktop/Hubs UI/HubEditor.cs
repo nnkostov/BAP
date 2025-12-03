@@ -33,7 +33,7 @@ namespace LegoTrainProject
 		{
 			flowLayoutPanelPort.Controls.Clear();
 
-			foreach (Port p in CurrentHub.RegistredPorts)
+			foreach (Port p in CurrentHub.RegisteredPorts)
 			{
 				Label labelPortName = new Label();
 				labelPortName.Text = "Port " + p.Id;
@@ -98,7 +98,7 @@ namespace LegoTrainProject
 			portToChange.Function = (Port.Functions)portBox.SelectedIndex;
 
 			CurrentHub.TrainMotorPort = null;
-			foreach (Port port in CurrentHub.RegistredPorts)
+			foreach (Port port in CurrentHub.RegisteredPorts)
 				if (port.Function == Port.Functions.TRAIN_MOTOR)
 					CurrentHub.TrainMotorPort = port.Id;
 

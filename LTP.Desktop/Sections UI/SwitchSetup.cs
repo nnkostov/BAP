@@ -42,7 +42,7 @@ namespace LegoTrainProject
 
 			foreach (Hub h in Project.RegisteredTrains)
 			{
-				foreach (Port p in h.RegistredPorts)
+				foreach (Port p in h.RegisteredPorts)
 				{
 					if (p.Function == Port.Functions.SWITCH_DOUBLECROSS || p.Function == Port.Functions.SWITCH_STANDARD || p.Function == Port.Functions.SWITCH_TRIXBRIX)
 					{

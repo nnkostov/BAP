@@ -79,13 +79,13 @@ namespace LegoTrainProject
 		public override void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			Port portA = new Port("A", 1, true);
 			Port portB = new Port("B", 2, true);
 
-			RegistredPorts.Add(portA);
-			RegistredPorts.Add(portB);
+			RegisteredPorts.Add(portA);
+			RegisteredPorts.Add(portB);
 		}
 
 		protected override void ActivatePortDevice(byte port, byte type, byte mode, byte format)
@@ -314,7 +314,7 @@ namespace LegoTrainProject
 									}
 									else
 									{
-										Port port = RegistredPorts[portId];
+										Port port = RegisteredPorts[portId];
 
 										//MainBoard.WriteLine($"Channel {channel} " + val.ToString("X"));
 
