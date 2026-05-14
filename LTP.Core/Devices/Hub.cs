@@ -12,6 +12,8 @@ using System.Linq;
 using System.Threading;
 using static LegoTrainProject.Port;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using LegoTrainProject.Constants;
 
 namespace LegoTrainProject
 {
@@ -25,7 +27,7 @@ namespace LegoTrainProject
         /// Semaphore for synchronizing Bluetooth write operations.
         /// </summary>
         [NonSerialized]
-        private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
 
         // List of Services
         [NonSerialized]
@@ -91,7 +93,17 @@ namespace LegoTrainProject
         /// <summary>
         /// List of all Ports Connected
         /// </summary>
-        public List<Port> RegisteredPorts = new List<Port>();
+        public List<Port> RegistredPorts = new List<Port>();
+
+        /// <summary>
+        /// Public accessor for registered ports (preserves binary-compatible field name).
+        /// </summary>
+        [JsonIgnore]
+        public List<Port> RegisteredPorts
+        {
+            get => RegistredPorts;
+            set => RegistredPorts = value;
+        }
 
 		/// <summary>
 		/// 
@@ -202,6 +214,20 @@ namespace LegoTrainProject
             ColorTriggered = null;
             DistanceTriggered = null;
 			RemoteTriggered = null;
+        }
+
+        /// <summary>
+        /// Reinitializes [NonSerialized] fields after deserialization.
+        /// Field initializers do not run during deserialization, so any
+        /// NonSerialized field that needs a non-null default must be set here.
+        /// </summary>
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if (_writeLock == null)
+                _writeLock = new SemaphoreSlim(1, 1);
+            if (State == null)
+                State = new int[100];
         }
 
 		internal void OnDataUpdated()
@@ -735,7 +761,10 @@ namespace LegoTrainProject
             finally
             {
                 if (lockAcquired)
-                    _writeLock.Release();
+                {
+                    try { _writeLock.Release(); }
+                    catch (ObjectDisposedException) { /* Semaphore disposed during write */ }
+                }
             }
         }
 
@@ -846,13 +875,17 @@ namespace LegoTrainProject
         public virtual void SetMotorSpeed(string port, int speed)
         {
             // Validate and clamp speed to valid range
-            if (speed > 100)
+            // Note: 127 is a special protocol value (brake/float) that must pass through unclamped
+            if (speed != MotorConstants.BRAKE)
             {
-                speed = 100;
-            }
-            else if (speed < -100)
-            {
-                speed = -100;
+                if (speed > 100)
+                {
+                    speed = 100;
+                }
+                else if (speed < -100)
+                {
+                    speed = -100;
+                }
             }
 
             // Validate port parameter
