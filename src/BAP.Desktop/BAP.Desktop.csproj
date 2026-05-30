@@ -7,6 +7,13 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>BAP.Desktop</AssemblyName>
+    <ApplicationIcon>Assets\bap-icon.ico</ApplicationIcon>
+    <Description>Cross-platform LEGO train and motorized device controller</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">
+    <ApplicationManifest />
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +22,7 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.7" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.7" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.7" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
@@ -24,6 +31,10 @@
   <ItemGroup>
     <ProjectReference Include="..\BAP.Core\BAP.Core.csproj" />
     <ProjectReference Include="..\BAP.Ble\BAP.Ble.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
 </Project>

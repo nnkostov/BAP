@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>Nikolay Kostov</Authors>
+    <Company>BAP Contributors</Company>
+    <Product>Brick Automation Project</Product>
+    <Copyright>Copyright (c) 2018-2025 Nikolay Kostov</Copyright>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <RepositoryUrl>https://github.com/nnkostov/BAP</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>
