@@ -30,7 +30,7 @@ public class ConnectionLimitSettingsTests
     public void OnlySetList_ChecksList()
     {
         var mac = (ulong)0xAABBCCDDEEFF;
-        var macHex = string.Format("{0:X}", mac);
+        var macHex = string.Format("{0:X12}", mac);
 
         var settings = new ConnectionLimitSettings
         {
@@ -40,5 +40,18 @@ public class ConnectionLimitSettingsTests
 
         Assert.True(settings.IsMacAddressAllowed(mac, new TrainProjectModel()));
         Assert.False(settings.IsMacAddressAllowed(0x112233445566, new TrainProjectModel()));
+    }
+
+    [Fact]
+    public void OnlySetList_MatchesLeadingZeroAddress()
+    {
+        var mac = (ulong)0x001B21AABBCC;
+        var settings = new ConnectionLimitSettings
+        {
+            Mode = ConnectionLimitMode.OnlySetList,
+            AllowedDevices = "001B21AABBCC"
+        };
+
+        Assert.True(settings.IsMacAddressAllowed(mac, new TrainProjectModel()));
     }
 }

@@ -27,7 +27,7 @@ public class ConnectionLimitSettings
 
     private bool IsInSetList(ulong bluetoothAddress)
     {
-        var macAddress = string.Format("{0:X}", bluetoothAddress);
+        var macAddress = string.Format("{0:X12}", bluetoothAddress);
         var lines = AllowedDevices.Split(["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries);
         return lines.Any(line => line.Trim() == macAddress);
     }
