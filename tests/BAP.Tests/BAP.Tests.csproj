@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BAP.Core\BAP.Core.csproj" />
+    <ProjectReference Include="..\..\src\BAP.Ble\BAP.Ble.csproj" />
   </ItemGroup>
 
 </Project>
