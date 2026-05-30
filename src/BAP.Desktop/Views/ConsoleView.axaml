@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BAP.Desktop.ViewModels"
+             x:Class="BAP.Desktop.Views.ConsoleView"
+             x:DataType="vm:ConsoleViewModel">
+
+    <DockPanel>
+        <!-- Header -->
+        <Border DockPanel.Dock="Top" Padding="12,8" Background="#E8E8E8">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}" />
+                <TextBlock Text="Debug Console" FontSize="16" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
+        <!-- Log Entries -->
+        <ListBox ItemsSource="{Binding Entries}" Background="#1E1E1E"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:ConsoleEntry">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="4,1">
+                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}"
+                                   Foreground="#808080" FontFamily="Cascadia Mono,Consolas,Courier New"
+                                   FontSize="11" />
+                        <TextBlock Text="{Binding Text}"
+                                   Foreground="#D4D4D4" FontFamily="Cascadia Mono,Consolas,Courier New"
+                                   FontSize="11" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>

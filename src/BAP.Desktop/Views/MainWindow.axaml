@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BAP.Desktop.ViewModels"
+        xmlns:views="using:BAP.Desktop.Views"
+        x:Class="BAP.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Width="1100" Height="700"
+        MinWidth="800" MinHeight="500">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Project" Command="{Binding NewProjectCommand}" />
+                <MenuItem Header="_Open Project" Command="{Binding LoadProjectCommand}" />
+                <MenuItem Header="_Save Project" Command="{Binding SaveProjectCommand}" />
+                <Separator />
+            </MenuItem>
+        </Menu>
+
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="#F0F0F0" Padding="8,4">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <TextBlock Text="{Binding Hubs.Count, StringFormat='Hubs: {0}'}" />
+                <TextBlock Text="{Binding Programs.Count, StringFormat='Programs: {0}'}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}">
+            <!-- Hubs Tab -->
+            <TabItem Header="Hubs">
+                <views:HubListView DataContext="{Binding}" />
+            </TabItem>
+
+            <!-- Programs Tab -->
+            <TabItem Header="Programs">
+                <views:ProgramListView DataContext="{Binding}" />
+            </TabItem>
+
+            <!-- Console Tab -->
+            <TabItem Header="Console">
+                <views:ConsoleView DataContext="{Binding Console}" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
