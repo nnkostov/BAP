@@ -2,6 +2,7 @@ using BAP.Ble.Scripting;
 using BAP.Core.Interfaces;
 using BAP.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BAP.Ble;
 
@@ -14,6 +15,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddBapBle(this IServiceCollection services)
     {
+        // Register NullBleAdapter as fallback if no platform adapter was registered
+        services.TryAddSingleton<IBleAdapter, NullBleAdapter>();
         services.AddSingleton<IHubConnectionFactory, HubConnectionFactory>();
         services.AddSingleton<IScriptEngine, RoslynScriptEngine>();
         services.AddSingleton<SectionManager>();
