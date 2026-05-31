@@ -38,7 +38,7 @@ namespace LegoTrainProject
 			comboBoxDetector.Items.Clear();
 			foreach (Hub h in Project.RegisteredTrains)
 			{
-				foreach (Port p in h.RegistredPorts)
+				foreach (Port p in h.RegisteredPorts)
 				{
 					if (p.Function == Port.Functions.SENSOR)
 						comboBoxDetector.Items.Add(new DetectorItem(h, p));

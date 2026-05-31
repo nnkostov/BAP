@@ -69,17 +69,17 @@ namespace LegoTrainProject
 		public override void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			Port portA = new Port("A", 0, true);
 			Port portB = new Port("B", 2, true);
 			Port portC = new Port("C", 1, true);
 			Port portD = new Port("D", 3, true);
 
-			RegistredPorts.Add(portA);
-			RegistredPorts.Add(portB);
-			RegistredPorts.Add(portC);
-			RegistredPorts.Add(portD);
+			RegisteredPorts.Add(portA);
+			RegisteredPorts.Add(portB);
+			RegisteredPorts.Add(portC);
+			RegisteredPorts.Add(portD);
 
 			portA.Function = Port.Functions.MOTOR;
 			portB.Function = Port.Functions.MOTOR;
@@ -93,7 +93,7 @@ namespace LegoTrainProject
 
 			if (!CalibrationIsDown && Environment.TickCount - LastCalibrationTick > 5000)
 			{
-				foreach (Port p in RegistredPorts)
+				foreach (Port p in RegisteredPorts)
 				{
 					p.MaxDistance = 0;
 					p.MinDistance = 0;
@@ -109,7 +109,7 @@ namespace LegoTrainProject
 			WriteMessage(new byte[] { 0x2C, 0x01, 0x03, 0x05, 0x07, 0x08}, CharacteristicCommands);
 			WriteMessage(new byte[] { 0x2E, 0x01, 0x03, 0x05, 0x07, 0x08}, CharacteristicCommands);
 
-			foreach (Port p in RegistredPorts)
+			foreach (Port p in RegisteredPorts)
 				Stop(p.Id, true);
 
 			CalibrationIsDown = false;
@@ -166,7 +166,7 @@ namespace LegoTrainProject
 									else
 									{
 										portId = (channel == 1) ? 0 : (channel == 3) ? 2 : (channel == 5) ? 1 : 3;
-										Port port = RegistredPorts[portId];
+										Port port = RegisteredPorts[portId];
 
 										if (port.Function == Port.Functions.SENSOR)
 										{
@@ -322,6 +322,25 @@ namespace LegoTrainProject
 
 			portObj.Speed = brightness;
 			WriteMessage(new byte[] { 0x01, (byte)portObj.Value, 1, (byte)(portObj.Speed * 2.5) }, CharacteristicCommands);
+		}
+
+		/// <summary>
+		/// Disposes resources specific to SbrickHub.
+		/// </summary>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				if (pingTimer != null)
+				{
+					pingTimer.Stop();
+					pingTimer.Elapsed -= PingTimer_Elapsed;
+					pingTimer.Dispose();
+					pingTimer = null;
+				}
+			}
+
+			base.Dispose(disposing);
 		}
 	}
 }

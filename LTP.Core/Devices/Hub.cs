@@ -7,17 +7,27 @@ using System.Timers;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 using System.Threading;
 using static LegoTrainProject.Port;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using LegoTrainProject.Constants;
 
 namespace LegoTrainProject
 {
     [Serializable]
-    public class Hub
+    public class Hub : IDisposable
     {
+        [NonSerialized]
+        private bool _disposed = false;
+
+        /// <summary>
+        /// Semaphore for synchronizing Bluetooth write operations.
+        /// </summary>
+        [NonSerialized]
+        private SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
+
         // List of Services
         [NonSerialized]
         internal GattDeviceServicesResult Gatt;
@@ -83,6 +93,16 @@ namespace LegoTrainProject
         /// List of all Ports Connected
         /// </summary>
         public List<Port> RegistredPorts = new List<Port>();
+
+        /// <summary>
+        /// Public accessor for registered ports (preserves binary-compatible field name).
+        /// </summary>
+        [JsonIgnore]
+        public List<Port> RegisteredPorts
+        {
+            get => RegistredPorts;
+            set => RegistredPorts = value;
+        }
 
 		/// <summary>
 		/// 
@@ -170,7 +190,7 @@ namespace LegoTrainProject
 
 		internal bool IsTrain()
 		{
-			foreach (Port p in RegistredPorts)
+			foreach (Port p in RegisteredPorts)
 				if (p.Function == Functions.TRAIN_MOTOR)
 					return true;
 
@@ -193,6 +213,20 @@ namespace LegoTrainProject
             ColorTriggered = null;
             DistanceTriggered = null;
 			RemoteTriggered = null;
+        }
+
+        /// <summary>
+        /// Reinitializes [NonSerialized] fields after deserialization.
+        /// Field initializers do not run during deserialization, so any
+        /// NonSerialized field that needs a non-null default must be set here.
+        /// </summary>
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if (_writeLock == null)
+                _writeLock = new SemaphoreSlim(1, 1);
+            if (State == null)
+                State = new int[100];
         }
 
 		internal void OnDataUpdated()
@@ -244,7 +278,7 @@ namespace LegoTrainProject
 		public virtual void InitPorts()
 		{
 			// Clear any previous port
-			RegistredPorts.Clear();
+			RegisteredPorts.Clear();
 
 			if (Type == Types.BOOST_MOVE_HUB)
 			{
@@ -269,17 +303,17 @@ namespace LegoTrainProject
 				Port portC = new Port("C", 1, true);
 				Port portD = new Port("D", 2, true);
 
-				RegistredPorts.Add(portA);
-				RegistredPorts.Add(portB);
-				RegistredPorts.Add(portC);
-				RegistredPorts.Add(portD);
+				RegisteredPorts.Add(portA);
+				RegisteredPorts.Add(portB);
+				RegisteredPorts.Add(portC);
+				RegisteredPorts.Add(portD);
 			}
 			else
 			{
-				RegistredPorts.Add(new Port("A", 0));
-				RegistredPorts.Add(new Port("B", 1));
-				RegistredPorts.Add(new Port("C", 2));
-				RegistredPorts.Add(new Port("D", 3));
+				RegisteredPorts.Add(new Port("A", 0));
+				RegisteredPorts.Add(new Port("B", 1));
+				RegisteredPorts.Add(new Port("C", 2));
+				RegisteredPorts.Add(new Port("D", 3));
 			}
 		}
 
@@ -328,7 +362,7 @@ namespace LegoTrainProject
 				// If it succeeded
 				if (Characteristic != null)
                 {
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000).ConfigureAwait(false);
 
 					// Immediately attach to get all data from the Hub
 					Characteristic.ValueChanged += Characteristic_ValueChanged;
@@ -486,10 +520,10 @@ namespace LegoTrainProject
 
 		private void UpdateBoostMovePortToLatestFirmware()
 		{
-			RegistredPorts[0].Value = 0;
-			RegistredPorts[1].Value = 1;
-			RegistredPorts[2].Value = 2;
-			RegistredPorts[3].Value = 3;
+			RegisteredPorts[0].Value = 0;
+			RegisteredPorts[1].Value = 1;
+			RegisteredPorts[2].Value = 2;
+			RegisteredPorts[3].Value = 3;
 		}
 
 		private void ParsePortMessage(byte [] data)
@@ -679,15 +713,30 @@ namespace LegoTrainProject
             WriteMessage(message, true);
         }
 
-            /// <summary>
-            /// Send the message to the proper device and characteristic
-            /// </summary>
-            /// <param name="message"></param>
+        /// <summary>
+        /// Send the message to the proper device and characteristic.
+        /// Thread-safe: uses semaphore to ensure only one write at a time.
+        /// </summary>
+        /// <param name="message">The message bytes to send</param>
+        /// <param name="addLength">Whether to prepend length header</param>
         protected virtual async void WriteMessage(byte[] message, bool addLength)
         {
+            if (Characteristic == null || _disposed)
+                return;
+
+            bool lockAcquired = false;
             try
             {
-                if (Characteristic != null)
+                // Wait for exclusive access to write (with timeout to prevent deadlock)
+                lockAcquired = await _writeLock.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+                if (!lockAcquired)
+                {
+                    MainBoard.WriteLine($"{Name}: Bluetooth write timeout", Color.Orange);
+                    return;
+                }
+
+                if (Characteristic != null && !_disposed)
                 {
                     using (DataWriter writer = new DataWriter())
                     {
@@ -698,13 +747,24 @@ namespace LegoTrainProject
                     }
                 }
             }
-            catch
+            catch (ObjectDisposedException)
             {
-				MainBoard.WriteLine($"{Name} lost bluetooth connection", Color.Red);
+                // Device was disposed during write - ignore
+            }
+            catch (Exception ex)
+            {
+				MainBoard.WriteLine($"{Name} lost bluetooth connection: {ex.Message}", Color.Red);
 				Dispose();
-
 				OnDataUpdated();
 			}
+            finally
+            {
+                if (lockAcquired)
+                {
+                    try { _writeLock.Release(); }
+                    catch (ObjectDisposedException) { /* Semaphore disposed during write */ }
+                }
+            }
         }
 
 		public virtual void Disconnect()
@@ -713,23 +773,74 @@ namespace LegoTrainProject
 				WriteMessage(new byte[] { 0x02, 0x01 });
 		}
 
+        /// <summary>
+        /// Releases all resources used by this Hub.
+        /// </summary>
         public void Dispose()
         {
-			Disconnect();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            Gatt = null;
-            AllCharacteristic = null;
-            Characteristic = null;
+        /// <summary>
+        /// Releases unmanaged and optionally managed resources.
+        /// </summary>
+        /// <param name="disposing">True to release both managed and unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
 
-            if (Device != null)
-                Device.Dispose();
+            if (disposing)
+            {
+                // Disconnect the hub gracefully
+                Disconnect();
 
-            Device = null;
-			IsConnected = false;
+                // Dispose of all port timers
+                if (RegisteredPorts != null)
+                {
+                    foreach (var port in RegisteredPorts)
+                    {
+                        if (port.MotorTimer != null)
+                        {
+                            port.MotorTimer.Stop();
+                            port.MotorTimer.Dispose();
+                            port.MotorTimer = null;
+                        }
+                    }
+                }
 
-			// Finally, we clear this device to welcome new Advertisements
-			MainBoard.registeredBluetoothDevices.RemoveAll(s => s == BluetoothAddress);
-		}
+                // Dispose of Bluetooth device
+                if (Device != null)
+                {
+                    Device.Dispose();
+                    Device = null;
+                }
+
+                // Dispose of write lock semaphore
+                _writeLock?.Dispose();
+
+                // Clear GATT resources
+                Gatt = null;
+                AllCharacteristic = null;
+                Characteristic = null;
+
+                IsConnected = false;
+
+                // Remove from registered devices
+                MainBoard.registeredBluetoothDevices?.RemoveAll(s => s == BluetoothAddress);
+            }
+
+            _disposed = true;
+        }
+
+        /// <summary>
+        /// Finalizer to ensure resources are released.
+        /// </summary>
+        ~Hub()
+        {
+            Dispose(false);
+        }
 
 
 
@@ -756,19 +867,40 @@ namespace LegoTrainProject
 
 
         /// <summary>
-        /// Set Motor Speed for this train
+        /// Set Motor Speed for this train.
         /// </summary>
-        /// <param name="port"></param>
-        /// <param name="speed"></param>
+        /// <param name="port">The port identifier (A, B, C, D, or AB for combined)</param>
+        /// <param name="speed">Speed value from -100 to 100. Values outside this range will be clamped.</param>
         public virtual void SetMotorSpeed(string port, int speed)
         {
+            // Validate and clamp speed to valid range
+            // Note: 127 is a special protocol value (brake/float) that must pass through unclamped
+            if (speed != MotorConstants.BRAKE)
+            {
+                if (speed > 100)
+                {
+                    speed = 100;
+                }
+                else if (speed < -100)
+                {
+                    speed = -100;
+                }
+            }
+
+            // Validate port parameter
+            if (string.IsNullOrEmpty(port))
+            {
+                MainBoard.WriteLine($"ERROR: {Name} - Port name cannot be null or empty", Color.Red);
+                return;
+            }
+
             byte[] message;
             Port portObj = GetPortFromPortId(port);
 
             // If we can't find the port, we can't do anything!
             if (portObj == null)
             {
-                MainBoard.WriteLine("Could not set Motor Speed to " + speed + " for " + Name + " because no default port are setup", Color.Red);
+                MainBoard.WriteLine($"ERROR: {Name} - Port '{port}' not found. Could not set speed to {speed}", Color.Red);
                 return;
             }
 
@@ -849,18 +981,40 @@ namespace LegoTrainProject
 		}
 
 		/// <summary>
-		/// Automatically accelerate or decelerate a train
+		/// Automatically accelerate or decelerate a motor from one speed to another over time.
 		/// </summary>
-		/// <param name="port"></param>
-		/// <param name="fromSpeed"></param>
-		/// <param name="toSpeed"></param>
-		/// <param name="timeinms"></param>
+		/// <param name="port">The port identifier</param>
+		/// <param name="fromSpeed">Starting speed (-100 to 100)</param>
+		/// <param name="toSpeed">Target speed (-100 to 100)</param>
+		/// <param name="timeinms">Duration of ramp in milliseconds (must be positive)</param>
 		public void RampMotorSpeed(string port, int fromSpeed, int toSpeed, int timeinms)
         {
+			// Validate parameters
+			if (string.IsNullOrEmpty(port))
+			{
+				MainBoard.WriteLine($"ERROR: {Name} - Port name cannot be null or empty", Color.Red);
+				return;
+			}
+
+			// Clamp speed values
+			fromSpeed = Math.Max(-100, Math.Min(100, fromSpeed));
+			toSpeed = Math.Max(-100, Math.Min(100, toSpeed));
+
+			// Validate time
+			if (timeinms <= 0)
+			{
+				// If no time specified, just set the target speed directly
+				SetMotorSpeed(port, toSpeed);
+				return;
+			}
+
 			Port p = GetPortFromPortId(port);
 
 			if (p == null)
+			{
+				MainBoard.WriteLine($"ERROR: {Name} - Port '{port}' not found", Color.Red);
 				return;
+			}
 
 			if (p.MotorTimer != null)
             {
@@ -869,6 +1023,9 @@ namespace LegoTrainProject
             }
 
             double steps = Math.Abs(toSpeed - fromSpeed);
+			if (steps == 0)
+				return; // Nothing to do
+
             double delay = timeinms / steps;
             double increment = 1;
             if (delay < 50 && steps > 0)
@@ -933,7 +1090,18 @@ namespace LegoTrainProject
 
 		public void ActivateSwitch(string port, bool left)
         {
+			// Fire and forget - starts the async operation without blocking
+			_ = ActivateSwitchAsync(port, left);
+		}
+
+		/// <summary>
+		/// Activates a switch asynchronously using proper async/await pattern.
+		/// </summary>
+		public async Task ActivateSwitchAsync(string port, bool left)
+		{
 			Port targetPort = GetPortFromPortId(port);
+			if (targetPort == null)
+				return;
 
 			switch (targetPort.Function)
 			{
@@ -942,31 +1110,17 @@ namespace LegoTrainProject
 						targetPort.TargetSpeed = (left) ? -100 : 100;
 						SetMotorSpeed(port, targetPort.TargetSpeed);
 
-						System.Timers.Timer timer = new System.Timers.Timer(700);
-						timer.Elapsed += (object sender, ElapsedEventArgs ev) =>
-						{
-							// Stop it after 700ms 
-							timer.Stop();
-							Stop(port);
+						// First activation: run for 700ms
+						await Task.Delay(700).ConfigureAwait(false);
+						Stop(port);
 
-							timer = new System.Timers.Timer(200);
-							timer.Elapsed += (object sender2, ElapsedEventArgs ev2) =>
-							{
-								timer.Stop();
+						// Brief pause
+						await Task.Delay(200).ConfigureAwait(false);
 
-								SetMotorSpeed(port, targetPort.TargetSpeed);
-								timer = new System.Timers.Timer(700);
-								timer.Elapsed += (object sender3, ElapsedEventArgs ev3) =>
-								{									
-									timer.Stop();
-									timer.Dispose();
-									Stop(port);
-								};
-								timer.Start();
-							};
-							timer.Start();
-						};
-						timer.Start();
+						// Second activation: run for 700ms
+						SetMotorSpeed(port, targetPort.TargetSpeed);
+						await Task.Delay(700).ConfigureAwait(false);
+						Stop(port);
 						break;
 					}
 				case Port.Functions.SWITCH_STANDARD:
@@ -974,14 +1128,9 @@ namespace LegoTrainProject
 						targetPort.TargetSpeed = (left) ? -100 : 100;
 						SetMotorSpeed(port, targetPort.TargetSpeed);
 
-						System.Timers.Timer timer = new System.Timers.Timer(500);
-						timer.Elapsed += (object sender, ElapsedEventArgs ev) =>
-						{
-							// Stop it after 700ms 
-							timer.Stop();
-							Stop(port, true);
-						};
-						timer.Start();
+						// Run for 500ms then stop
+						await Task.Delay(500).ConfigureAwait(false);
+						Stop(port, true);
 						break;
 					}
 				case Port.Functions.SWITCH_TRIXBRIX:
@@ -989,14 +1138,9 @@ namespace LegoTrainProject
 						targetPort.TargetSpeed = (left) ? -40 : 40;
 						SetMotorSpeed(port, targetPort.TargetSpeed);
 
-						System.Timers.Timer timer = new System.Timers.Timer(500);
-						timer.Elapsed += (object sender, ElapsedEventArgs ev) =>
-						{
-							// Stop it after 700ms 
-							timer.Stop();
-							Stop(port);
-						};
-						timer.Start();
+						// Run for 500ms then stop
+						await Task.Delay(500).ConfigureAwait(false);
+						Stop(port);
 						break;
 					}
 			}
@@ -1004,7 +1148,7 @@ namespace LegoTrainProject
 
         public void Stop()
         {
-			foreach (Port p in RegistredPorts)
+			foreach (Port p in RegisteredPorts)
 				if (p.Speed != 0)
 					Stop(p.Id, true);
         }
@@ -1322,7 +1466,7 @@ namespace LegoTrainProject
 
 		public Port GetPortFromPortId(string name)
         {
-            foreach (Port port in RegistredPorts)
+            foreach (Port port in RegisteredPorts)
             {
                 if (port.Id == name)
                     return port;
@@ -1333,7 +1477,7 @@ namespace LegoTrainProject
 
         protected Port GetPortFromPortNumber(int number)
         {
-            foreach (Port port in RegistredPorts)
+            foreach (Port port in RegisteredPorts)
             {
                 if (port.Value == number)
                     return port;
@@ -1344,25 +1488,76 @@ namespace LegoTrainProject
 
         internal static void SaveAll(List<Hub> registeredTrains)
         {
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream("./trainAll.txt", FileMode.Create, FileAccess.Write);
-            formatter.Serialize(stream, registeredTrains);
-            stream.Close();
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto,
+                    Formatting = Formatting.Indented
+                };
+                string json = JsonConvert.SerializeObject(registeredTrains, settings);
+                File.WriteAllText("./trainAll.json", json);
+            }
+            catch (Exception ex)
+            {
+                MainBoard.WriteLine("ERROR - Could not save trains: " + ex.Message, Color.Red);
+            }
         }
 
         internal static List<Hub> LoadAll(string path)
         {
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read);
-            List<Hub> trains = null;
+            try
+            {
+                // Try JSON format first (new format)
+                string jsonPath = Path.ChangeExtension(path, ".json");
+                if (File.Exists(jsonPath))
+                {
+                    string json = File.ReadAllText(jsonPath);
+                    var settings = new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.Auto
+                    };
+                    var trains = JsonConvert.DeserializeObject<List<Hub>>(json, settings);
+                    return trains ?? new List<Hub>();
+                }
 
-            if (stream.Length > 0)
-                trains = (List<Hub>)formatter.Deserialize(stream);
+                // Try legacy binary format
+                if (File.Exists(path))
+                {
+                    var legacyTrains = LoadLegacyFormat(path);
+                    if (legacyTrains != null && legacyTrains.Count > 0)
+                    {
+                        SaveAll(legacyTrains);
+                        MainBoard.WriteLine("Train data migrated to JSON format.", Color.Green);
+                        return legacyTrains;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainBoard.WriteLine("ERROR - Could not load trains: " + ex.Message, Color.Red);
+            }
 
-            stream.Close();
-            trains = (trains == null) ? new List<Hub>() : trains;
-
-            return trains;
+            return new List<Hub>();
         }
+
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete
+        private static List<Hub> LoadLegacyFormat(string path)
+        {
+            try
+            {
+                using (Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    if (stream.Length == 0) return null;
+                    var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    return (List<Hub>)formatter.Deserialize(stream);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+#pragma warning restore SYSLIB0011
     }
 }

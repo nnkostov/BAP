@@ -58,7 +58,7 @@ namespace LegoTrainProject.Sections_UI
 		{
 			if (Section.CustomCodeEvent == null)
 			{
-				Section.CustomCodeEvent = new TrainProgramEvent(TrainProgramEvent.EventType.User_Triggerd);
+				Section.CustomCodeEvent = new TrainProgramEvent(TrainProgramEvent.EventType.User_Triggered);
 				Section.CustomCodeEvent.CodeToRun = @"
 Hub trainInSection = Hub[%CurrentTrainIndex%];
 trainInSection.SetMotorSpeed(trainInSection.TrainMotorPort, 70);

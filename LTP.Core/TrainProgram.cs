@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -23,7 +22,7 @@ namespace LegoTrainProject
         public enum EventType
         {
             Sensor_Triggered = 0,
-            User_Triggerd = 1,
+            User_Triggered = 1,
 			Global_Code = 2
 		}
 
