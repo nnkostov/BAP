@@ -6,44 +6,43 @@
 
     <DockPanel>
         <!-- Header -->
-        <Border DockPanel.Dock="Top" Classes="section-header">
+        <Border DockPanel.Dock="Top" Padding="12,6"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Content="Clear" Classes="ghost"
-                        Command="{Binding ClearCommand}" />
-                <StackPanel>
-                    <TextBlock Text="Debug Console" FontSize="18" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}" />
-                    <TextBlock Text="System messages, BLE events, and script output"
-                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        Command="{Binding ClearCommand}" FontSize="11" Padding="8,3" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Width="3" Height="14" CornerRadius="2"
+                            Background="{StaticResource SemanticAmberBrush}" />
+                    <TextBlock Text="CONSOLE" FontSize="12" FontWeight="Bold"
+                               Foreground="{StaticResource TextHBrush}"
+                               LetterSpacing="1.5" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Log Entries -->
-        <Border Background="#0D0D14">
-            <ListBox ItemsSource="{Binding Entries}" Background="Transparent"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     Padding="8,4">
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="vm:ConsoleEntry">
-                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="4,2">
-                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}"
-                                       Foreground="#505068"
-                                       FontFamily="Cascadia Mono,JetBrains Mono,Consolas,Courier New"
-                                       FontSize="12" MinWidth="90" />
-                            <TextBlock Text="{Binding LevelTag}"
-                                       FontSize="10" FontWeight="Bold"
-                                       FontFamily="Cascadia Mono,JetBrains Mono,Consolas,Courier New"
-                                       MinWidth="36"
-                                       Foreground="#808090" />
-                            <TextBlock Text="{Binding Text}"
-                                       Foreground="#C8C8D8"
-                                       FontFamily="Cascadia Mono,JetBrains Mono,Consolas,Courier New"
-                                       FontSize="12" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Border>
+        <!-- Log entries -->
+        <ListBox ItemsSource="{Binding Entries}" Background="#08081A"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 Padding="4,2">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:ConsoleEntry">
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="2,1">
+                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}"
+                                   Foreground="#3D4663"
+                                   FontFamily="Cascadia Mono,JetBrains Mono,Consolas,Courier New"
+                                   FontSize="11" MinWidth="80" />
+                        <TextBlock Text="{Binding LevelTag}" FontSize="10" FontWeight="Bold"
+                                   FontFamily="Cascadia Mono,JetBrains Mono,Consolas,Courier New"
+                                   MinWidth="32"
+                                   Foreground="#586580" />
+                        <TextBlock Text="{Binding Text}"
+                                   Foreground="#8892B0"
+                                   FontFamily="Cascadia Mono,JetBrains Mono,Consolas,Courier New"
+                                   FontSize="11" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </DockPanel>
 </UserControl>

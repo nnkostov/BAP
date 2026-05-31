@@ -12,6 +12,8 @@ public partial class ProgramViewModel : ObservableObject
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private bool _isRunning;
 
+    public string RunLabel => IsRunning ? "Stop" : "Start";
+
     public ObservableCollection<EventViewModel> Events { get; } = [];
 
     public ProgramViewModel(TrainProgramModel program)
@@ -24,6 +26,8 @@ public partial class ProgramViewModel : ObservableObject
     }
 
     partial void OnNameChanged(string value) => _program.Name = value;
+
+    partial void OnIsRunningChanged(bool value) => OnPropertyChanged(nameof(RunLabel));
 
     [RelayCommand]
     private void ToggleRunning()

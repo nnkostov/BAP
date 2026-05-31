@@ -16,7 +16,6 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty] private string _title = "Brick Automation Project";
     [ObservableProperty] private bool _isScanning;
-    [ObservableProperty] private int _selectedTabIndex;
 
     public ObservableCollection<HubViewModel> Hubs { get; } = [];
     public ObservableCollection<ProgramViewModel> Programs { get; } = [];

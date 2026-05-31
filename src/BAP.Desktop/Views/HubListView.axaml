@@ -2,81 +2,91 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:BAP.Desktop.ViewModels"
              x:Class="BAP.Desktop.Views.HubListView"
-             x:DataType="vm:MainWindowViewModel">
+             x:DataType="vm:MainWindowViewModel"
+             Background="{StaticResource BgPanelBrush}">
 
     <DockPanel>
-        <!-- Header -->
-        <Border DockPanel.Dock="Top" Classes="section-header">
+        <!-- Panel header -->
+        <Border DockPanel.Dock="Top" Classes="panel-header">
             <DockPanel>
-                <Button DockPanel.Dock="Right" Content="Scan for Hubs" Classes="primary"
+                <Button DockPanel.Dock="Right" Content="Scan" Classes="accent"
                         Command="{Binding ScanCommand}" />
-                <StackPanel>
-                    <TextBlock Text="Connected Hubs" FontSize="18" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}" />
-                    <TextBlock Text="Manage your LEGO Powered Up, Boost, and other BLE hubs"
-                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                <StackPanel Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="14" CornerRadius="2"
+                                Background="{StaticResource AccentCyanBrush}" />
+                        <TextBlock Text="HUBS" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TextHBrush}"
+                                   LetterSpacing="1.5" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Hubs.Count, StringFormat='{}{0} connected'}"
+                               FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                               Margin="11,0,0,0" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
         <!-- Content -->
-        <Panel Background="{StaticResource SurfaceMidBrush}">
-            <!-- Empty State -->
+        <Panel>
+            <!-- Empty state -->
             <StackPanel IsVisible="{Binding !Hubs.Count}"
-                        HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-                <TextBlock Text="⬡" FontSize="48" HorizontalAlignment="Center"
-                           Foreground="{StaticResource TextMutedBrush}" />
-                <TextBlock Text="No hubs connected" FontSize="16" FontWeight="SemiBold"
-                           HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                <TextBlock Text="Turn on your LEGO hub and click &quot;Scan for Hubs&quot; to connect"
-                           FontSize="13" HorizontalAlignment="Center"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="8" Margin="20">
+                <Border Width="56" Height="56" CornerRadius="28"
+                        Background="#1A5B8DEF" HorizontalAlignment="Center">
+                    <TextBlock Text="⬡" FontSize="24" Foreground="{StaticResource AccentBlueBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="No hubs connected" FontSize="14" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
+                <TextBlock Text="Power on a LEGO hub and press Scan"
+                           FontSize="12" HorizontalAlignment="Center"
                            Foreground="{StaticResource TextMutedBrush}" />
             </StackPanel>
 
-            <!-- Hub Cards -->
+            <!-- Hub cards -->
             <ScrollViewer IsVisible="{Binding Hubs.Count}">
-                <ItemsControl ItemsSource="{Binding Hubs}" Margin="8">
+                <ItemsControl ItemsSource="{Binding Hubs}" Margin="10">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="vm:HubViewModel">
                             <Border Classes="card">
-                                <StackPanel Spacing="12">
-                                    <!-- Hub Header -->
+                                <StackPanel Spacing="10">
+                                    <!-- Hub identity row -->
                                     <DockPanel>
-                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-                                            <Border Background="#33F5A623" CornerRadius="12" Padding="10,4">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                                            <!-- Battery badge -->
+                                            <Border Classes="badge" Background="#1A10B981">
                                                 <TextBlock Text="{Binding BatteryLevel, StringFormat='{}{0:F0}%'}"
-                                                           FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource AccentYellowBrush}" />
+                                                           FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource SemanticGreenBrush}" />
                                             </Border>
-                                            <Button Content="Stop All" Classes="danger"
-                                                    Command="{Binding StopAllCommand}" FontSize="12" />
+                                            <Button Content="Stop All" Classes="danger" FontSize="11" Padding="8,4"
+                                                    Command="{Binding StopAllCommand}" />
                                         </StackPanel>
                                         <StackPanel Spacing="2">
-                                            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold"
-                                                       Foreground="{StaticResource TextPrimaryBrush}" />
-                                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <TextBlock Text="{Binding TypeName}"
-                                                           Foreground="{StaticResource TextMutedBrush}" FontSize="12" />
-                                                <Border CornerRadius="8" Padding="8,2"
-                                                        IsVisible="{Binding IsConnected}"
-                                                        Background="#332ECC71">
-                                                    <TextBlock Foreground="{StaticResource AccentGreenBrush}"
-                                                               FontSize="11" FontWeight="SemiBold" Text="Connected" />
+                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{StaticResource TextHBrush}" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding TypeName}" FontSize="11"
+                                                           Foreground="{StaticResource TextMutedBrush}" />
+                                                <Border Classes="badge" IsVisible="{Binding IsConnected}"
+                                                        Background="#1A22D3EE">
+                                                    <TextBlock Text="Connected" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource AccentCyanBrush}" />
                                                 </Border>
-                                                <Border CornerRadius="8" Padding="8,2"
-                                                        IsVisible="{Binding !IsConnected}"
-                                                        Background="#33E74C3C">
-                                                    <TextBlock Foreground="{StaticResource AccentRedBrush}"
-                                                               FontSize="11" FontWeight="SemiBold" Text="Disconnected" />
+                                                <Border Classes="badge" IsVisible="{Binding !IsConnected}"
+                                                        Background="#1AEF4444">
+                                                    <TextBlock Text="Offline" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource SemanticRedBrush}" />
                                                 </Border>
                                             </StackPanel>
                                         </StackPanel>
                                     </DockPanel>
 
                                     <!-- Separator -->
-                                    <Border Height="1" Background="{StaticResource BorderSubtleBrush}" />
+                                    <Border Height="1" Background="{StaticResource BorderBrush}" />
 
-                                    <!-- Ports -->
+                                    <!-- Ports grid -->
                                     <ItemsControl ItemsSource="{Binding Ports}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -85,62 +95,56 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="vm:PortViewModel">
-                                                <Border Margin="4" Padding="12" CornerRadius="8"
-                                                        BorderBrush="{StaticResource BorderSubtleBrush}"
+                                                <Border Margin="0,0,6,6" Padding="10" CornerRadius="6"
+                                                        Background="{StaticResource BgInputBrush}"
+                                                        BorderBrush="{StaticResource BorderBrush}"
                                                         BorderThickness="1"
-                                                        Background="{StaticResource SurfaceMidBrush}"
-                                                        IsVisible="{Binding HasUI}" MinWidth="140">
+                                                        IsVisible="{Binding HasUI}" MinWidth="130">
                                                     <StackPanel Spacing="6">
                                                         <TextBlock Text="{Binding Id, StringFormat='Port {0}'}"
-                                                                   FontWeight="SemiBold" FontSize="12"
-                                                                   Foreground="{StaticResource AccentYellowBrush}" />
+                                                                   FontSize="11" FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentBlueBrush}" />
 
-                                                        <!-- Motor Control -->
-                                                        <StackPanel IsVisible="{Binding IsMotor}" Spacing="6">
+                                                        <!-- Motor -->
+                                                        <StackPanel IsVisible="{Binding IsMotor}" Spacing="4">
                                                             <Slider Minimum="-100" Maximum="100"
-                                                                    Value="{Binding Speed}"
-                                                                    Width="110"
-                                                                    TickFrequency="10"
-                                                                    IsSnapToTickEnabled="True" />
-                                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"
+                                                                    Value="{Binding Speed}" Width="110"
+                                                                    TickFrequency="10" IsSnapToTickEnabled="True" />
+                                                            <DockPanel>
+                                                                <Button DockPanel.Dock="Right" Content="Stop"
+                                                                        Classes="ghost" Command="{Binding StopCommand}"
+                                                                        FontSize="10" Padding="6,2" />
+                                                                <TextBlock Text="{Binding Speed, StringFormat='{}{0}%'}"
                                                                            FontSize="11"
                                                                            Foreground="{StaticResource TextMutedBrush}" />
-                                                                <Button Content="Stop" Classes="ghost"
-                                                                        Command="{Binding StopCommand}"
-                                                                        FontSize="10" Padding="6,2" />
-                                                            </StackPanel>
+                                                            </DockPanel>
                                                         </StackPanel>
 
-                                                        <!-- Switch Control -->
+                                                        <!-- Switch -->
                                                         <StackPanel IsVisible="{Binding IsSwitch}"
-                                                                    Orientation="Horizontal" Spacing="6">
-                                                            <Button Content="◄ Left" Classes="ghost"
+                                                                    Orientation="Horizontal" Spacing="4">
+                                                            <Button Content="◄" Classes="ghost"
                                                                     Command="{Binding SwitchLeftCommand}"
                                                                     FontSize="11" Padding="8,4" />
-                                                            <Button Content="Right ►" Classes="ghost"
+                                                            <Button Content="►" Classes="ghost"
                                                                     Command="{Binding SwitchRightCommand}"
                                                                     FontSize="11" Padding="8,4" />
                                                         </StackPanel>
 
-                                                        <!-- Sensor Display -->
-                                                        <StackPanel IsVisible="{Binding IsSensor}" Spacing="4">
+                                                        <!-- Sensor -->
+                                                        <StackPanel IsVisible="{Binding IsSensor}" Spacing="2">
                                                             <TextBlock Text="{Binding ColorLabel, StringFormat='Color: {0}'}"
-                                                                       FontSize="11"
-                                                                       Foreground="{StaticResource TextSecondaryBrush}" />
-                                                            <TextBlock Text="{Binding Distance, StringFormat='Distance: {0}'}"
-                                                                       FontSize="11"
-                                                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                                                                       FontSize="11" Foreground="{StaticResource TextBodyBrush}" />
+                                                            <TextBlock Text="{Binding Distance, StringFormat='Dist: {0}'}"
+                                                                       FontSize="11" Foreground="{StaticResource TextBodyBrush}" />
                                                         </StackPanel>
 
-                                                        <!-- Light Control -->
+                                                        <!-- Light -->
                                                         <StackPanel IsVisible="{Binding IsLight}" Spacing="4">
                                                             <Slider Minimum="0" Maximum="100"
-                                                                    Value="{Binding Speed}"
-                                                                    Width="110" />
-                                                            <TextBlock Text="{Binding Speed, StringFormat='Brightness: {0}'}"
-                                                                       FontSize="11"
-                                                                       Foreground="{StaticResource TextMutedBrush}" />
+                                                                    Value="{Binding Speed}" Width="110" />
+                                                            <TextBlock Text="{Binding Speed, StringFormat='Brightness: {0}%'}"
+                                                                       FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
                                                         </StackPanel>
                                                     </StackPanel>
                                                 </Border>

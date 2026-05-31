@@ -7,80 +7,60 @@
         Title="{Binding Title}"
         Width="1100" Height="700"
         MinWidth="800" MinHeight="500"
-        Background="{StaticResource SurfaceDarkBrush}">
+        Background="{StaticResource BgBaseBrush}">
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProjectCommand}" />
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding AddProgramCommand}" />
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding Console.ClearCommand}" />
+    </Window.KeyBindings>
+
     <DockPanel>
-        <!-- Menu Bar -->
-        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceHeaderBrush}"
-                BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,0,1"
-                Padding="4,2">
-            <Menu>
-                <MenuItem Header="_File">
-                    <MenuItem Header="_New Project" Command="{Binding NewProjectCommand}" />
-                    <MenuItem Header="_Open Project" Command="{Binding LoadProjectCommand}" />
-                    <MenuItem Header="_Save Project" Command="{Binding SaveProjectCommand}" />
-                    <Separator />
-                </MenuItem>
-            </Menu>
+        <!-- ═══ Toolbar ═══ -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource BgToolbarBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <DockPanel>
+                <!-- Right: project actions -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                    <Button Content="New" Classes="toolbar" Command="{Binding NewProjectCommand}" />
+                    <Button Content="Open" Classes="toolbar" Command="{Binding LoadProjectCommand}" />
+                    <Button Content="Save" Classes="toolbar" Command="{Binding SaveProjectCommand}" />
+                    <Border Width="1" Background="{StaticResource BorderBrush}" Margin="8,4" />
+                    <TextBlock Text="v2.0" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Left: app name -->
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="◆" FontSize="16" Foreground="{StaticResource AccentBlueBrush}" />
+                    <TextBlock Text="Brick Automation Project" FontSize="14" FontWeight="Bold"
+                               Foreground="{StaticResource TextHBrush}" />
+                </StackPanel>
+            </DockPanel>
         </Border>
 
-        <!-- Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceHeaderBrush}"
-                BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,1,0,0"
-                Padding="16,6">
-            <StackPanel Orientation="Horizontal" Spacing="24">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Ellipse Classes="status-dot" Fill="{StaticResource AccentBlueBrush}" />
-                    <TextBlock Text="{Binding Hubs.Count, StringFormat='Hubs: {0}'}"
-                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Ellipse Classes="status-dot" Fill="{StaticResource AccentGreenBrush}" />
-                    <TextBlock Text="{Binding Programs.Count, StringFormat='Programs: {0}'}"
-                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                </StackPanel>
-            </StackPanel>
+        <!-- ═══ Console (bottom, always visible) ═══ -->
+        <Border DockPanel.Dock="Bottom" Height="160"
+                Background="{StaticResource BgPanelBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+            <views:ConsoleView DataContext="{Binding Console}" />
         </Border>
 
-        <!-- Main Content -->
-        <TabControl SelectedIndex="{Binding SelectedTabIndex}"
-                    Padding="0" Margin="0">
-            <!-- Hubs Tab -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="⬡" FontSize="14" VerticalAlignment="Center" />
-                        <TextBlock Text="Hubs" VerticalAlignment="Center" />
-                    </StackPanel>
-                </TabItem.Header>
-                <views:HubListView DataContext="{Binding}" />
-            </TabItem>
+        <!-- ═══ Main content: Hubs (left) | Programs (right) ═══ -->
+        <Grid ColumnDefinitions="*,1,*">
+            <!-- Hubs panel -->
+            <views:HubListView Grid.Column="0" DataContext="{Binding}" />
 
-            <!-- Programs Tab -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="▶" FontSize="12" VerticalAlignment="Center" />
-                        <TextBlock Text="Programs" VerticalAlignment="Center" />
-                    </StackPanel>
-                </TabItem.Header>
-                <views:ProgramListView DataContext="{Binding}" />
-            </TabItem>
+            <!-- Divider -->
+            <Border Grid.Column="1" Background="{StaticResource BorderBrush}" />
 
-            <!-- Console Tab -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="⌘" FontSize="14" VerticalAlignment="Center" />
-                        <TextBlock Text="Console" VerticalAlignment="Center" />
-                    </StackPanel>
-                </TabItem.Header>
-                <views:ConsoleView DataContext="{Binding Console}" />
-            </TabItem>
-        </TabControl>
+            <!-- Programs panel -->
+            <views:ProgramListView Grid.Column="2" DataContext="{Binding}" />
+        </Grid>
     </DockPanel>
 </Window>
