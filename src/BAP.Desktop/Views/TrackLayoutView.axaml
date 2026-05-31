@@ -6,10 +6,10 @@
              Background="{StaticResource BgBaseBrush}">
 
     <DockPanel>
-        <!-- Panel header -->
+        <!-- ═══ Panel header ═══ -->
         <Border DockPanel.Dock="Top" Classes="panel-header">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
                     <Button Content="+ Section" Classes="ghost" FontSize="11"
                             Command="{Binding AddSectionCommand}" />
                     <Button Content="− Remove" Classes="ghost" FontSize="11"
@@ -33,49 +33,95 @@
             </DockPanel>
         </Border>
 
-        <!-- Track canvas -->
+        <!-- ═══ Paths bar (below header when sections exist) ═══ -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding Paths.Count}"
+                Background="#0A0A18" Padding="14,6"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" Text="PATHS" FontSize="10" FontWeight="Bold"
+                           Foreground="{StaticResource TextMutedBrush}" LetterSpacing="1"
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
+                <ItemsControl ItemsSource="{Binding Paths}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:TrackPathViewModel">
+                            <Border CornerRadius="10" Padding="10,3"
+                                    Background="#161630" BorderBrush="#1E293B" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse Width="6" Height="6" Fill="{Binding Color}"
+                                             VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" FontSize="11"
+                                               Foreground="{StaticResource TextBodyBrush}" />
+                                    <TextBlock Text="{Binding SectionCount, StringFormat='({0})'}"
+                                               FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Text="↻" FontSize="10" IsVisible="{Binding IsLoop}"
+                                               Foreground="{StaticResource AccentCyanBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <!-- ═══ Track canvas ═══ -->
         <Panel>
             <!-- Empty state -->
             <StackPanel IsVisible="{Binding !Nodes.Count}"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Spacing="8" Margin="20">
-                <Border Width="64" Height="64" CornerRadius="32"
-                        Background="#1A5B8DEF" HorizontalAlignment="Center">
-                    <TextBlock Text="⬡" FontSize="28" Foreground="{StaticResource AccentBlueBrush}"
+                        Spacing="12" Margin="20">
+                <Border Width="72" Height="72" CornerRadius="36"
+                        HorizontalAlignment="Center">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#1A5B8DEF" Offset="0" />
+                            <GradientStop Color="#0D22D3EE" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <TextBlock Text="⬡" FontSize="30" Foreground="{StaticResource AccentBlueBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
-                <TextBlock Text="No track layout" FontSize="16" FontWeight="SemiBold"
+                <TextBlock Text="No track layout" FontSize="18" FontWeight="SemiBold"
                            HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
-                <TextBlock Text="Add sections or load the demo track"
+                <TextBlock Text="Add sections to build your track, or load the demo"
                            FontSize="12" HorizontalAlignment="Center"
                            Foreground="{StaticResource TextMutedBrush}" />
+                <Button Content="Load Demo Track" Classes="accent" FontSize="12"
+                        HorizontalAlignment="Center" Margin="0,8,0,0"
+                        Command="{Binding LoadDemoTrackCommand}" />
             </StackPanel>
 
             <!-- Track rendering -->
             <Panel IsVisible="{Binding Nodes.Count}" ClipToBounds="True">
-                <!-- Legend -->
-                <StackPanel Orientation="Horizontal" Spacing="16" Margin="12"
-                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                            ZIndex="1">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Ellipse Width="8" Height="8" Fill="#10B981" />
-                        <TextBlock Text="Free" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                <!-- Legend (bottom-right, floating) -->
+                <Border CornerRadius="8" Padding="10,6" Margin="12"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Background="#CC0A0A18" ZIndex="1">
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse Width="8" Height="8" Fill="#10B981" />
+                            <TextBlock Text="Free" FontSize="10" Foreground="#64748B" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse Width="8" Height="8" Fill="#FBBF24" />
+                            <TextBlock Text="Reserved" FontSize="10" Foreground="#64748B" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse Width="8" Height="8" Fill="#EF4444" />
+                            <TextBlock Text="Occupied" FontSize="10" Foreground="#64748B" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="⑂" FontSize="11" Foreground="#22D3EE" FontWeight="Bold" />
+                            <TextBlock Text="Switch" FontSize="10" Foreground="#64748B" />
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Ellipse Width="8" Height="8" Fill="#FBBF24" />
-                        <TextBlock Text="Reserved" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Ellipse Width="8" Height="8" Fill="#EF4444" />
-                        <TextBlock Text="Occupied" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="⑂" FontSize="12" Foreground="{StaticResource AccentCyanBrush}" />
-                        <TextBlock Text="Switch" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
-                    </StackPanel>
-                </StackPanel>
+                </Border>
 
-                <!-- Connection lines -->
+                <!-- Connection lines (bezier curves drawn in code-behind) -->
                 <Canvas Name="ConnectionCanvas" />
 
                 <!-- Section nodes -->
@@ -93,33 +139,65 @@
                     </ItemsControl.ItemContainerTheme>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="vm:TrackNodeViewModel">
-                            <Border Width="120" Height="48" CornerRadius="6"
-                                    BorderThickness="2" Padding="8,4"
-                                    Background="{StaticResource BgCardBrush}"
-                                    BorderBrush="#10B981">
-                                <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <DockPanel>
-                                        <TextBlock DockPanel.Dock="Right" IsVisible="{Binding HasSwitch}"
-                                                   Text="⑂" FontSize="14"
-                                                   Foreground="{StaticResource AccentCyanBrush}"
-                                                   VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Name}" FontSize="11" FontWeight="Bold"
-                                                   Foreground="{StaticResource TextHBrush}"
-                                                   TextTrimming="CharacterEllipsis" />
-                                    </DockPanel>
-                                    <DockPanel>
-                                        <TextBlock DockPanel.Dock="Right"
-                                                   Text="{Binding MaxSpeed, StringFormat='{}{0}%'}"
-                                                   FontSize="9" Foreground="{StaticResource TextMutedBrush}" />
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <Ellipse Width="6" Height="6" Fill="#10B981"
-                                                     VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding StatusLabel}" FontSize="9"
-                                                       Foreground="{StaticResource TextMutedBrush}" />
+                            <!-- Outer glow wrapper -->
+                            <Panel>
+                                <!-- Glow shadow -->
+                                <Border Width="140" Height="56" CornerRadius="10"
+                                        Background="#0D5B8DEF" Margin="-2" />
+
+                                <!-- Main card -->
+                                <Border Width="136" Height="52" CornerRadius="8"
+                                        BorderThickness="1.5" ClipToBounds="True"
+                                        BorderBrush="#10B981">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#1E1E40" Offset="0" />
+                                            <GradientStop Color="#161630" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+
+                                    <Grid ColumnDefinitions="4,*">
+                                        <!-- Left accent stripe -->
+                                        <Border Grid.Column="0" CornerRadius="8,0,0,8"
+                                                Background="#10B981" />
+
+                                        <!-- Content -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center"
+                                                    Margin="8,0,8,0" Spacing="3">
+                                            <!-- Top row: name + switch icon -->
+                                            <DockPanel>
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
+                                                    <TextBlock IsVisible="{Binding HasDetector}"
+                                                               Text="◉" FontSize="10"
+                                                               Foreground="#FBBF24" VerticalAlignment="Center" />
+                                                    <TextBlock IsVisible="{Binding HasSwitch}"
+                                                               Text="⑂" FontSize="13" FontWeight="Bold"
+                                                               Foreground="#22D3EE" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold"
+                                                           Foreground="#E2E8F0"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </DockPanel>
+                                            <!-- Bottom row: status + speed -->
+                                            <DockPanel>
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
+                                                    <TextBlock Text="⚡" FontSize="8" Foreground="#475569"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding MaxSpeed, StringFormat='{}{0}'}"
+                                                               FontSize="10" Foreground="#64748B"
+                                                               FontWeight="SemiBold" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <Ellipse Width="7" Height="7" Fill="#10B981"
+                                                             VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding StatusLabel}" FontSize="10"
+                                                               Foreground="#64748B" />
+                                                </StackPanel>
+                                            </DockPanel>
                                         </StackPanel>
-                                    </DockPanel>
-                                </StackPanel>
-                            </Border>
+                                    </Grid>
+                                </Border>
+                            </Panel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

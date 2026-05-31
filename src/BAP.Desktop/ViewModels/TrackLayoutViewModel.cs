@@ -64,13 +64,24 @@ public record TrackConnectionViewModel(
     double X2, double Y2,
     bool IsBranch);
 
+public partial class TrackPathViewModel : ObservableObject
+{
+    [ObservableProperty] private string _name = string.Empty;
+    [ObservableProperty] private int _sectionCount;
+    [ObservableProperty] private bool _isLoop;
+    [ObservableProperty] private string _color = "#5B8DEF";
+}
+
 public partial class TrackLayoutViewModel : ObservableObject
 {
     private readonly SectionsModel _sections;
     private readonly ConsoleViewModel _console;
 
+    private static readonly string[] PathColors = ["#5B8DEF", "#22D3EE", "#10B981", "#FBBF24", "#EF4444", "#A78BFA"];
+
     public ObservableCollection<TrackNodeViewModel> Nodes { get; } = [];
     public ObservableCollection<TrackConnectionViewModel> Connections { get; } = [];
+    public ObservableCollection<TrackPathViewModel> Paths { get; } = [];
 
     public TrackLayoutViewModel(SectionsModel sections, ConsoleViewModel console)
     {
@@ -161,15 +172,16 @@ public partial class TrackLayoutViewModel : ObservableObject
     {
         Nodes.Clear();
         Connections.Clear();
+        Paths.Clear();
 
         if (_sections.Sections.Count == 0) return;
 
         // Auto-layout: arrange sections in a visual pattern
         LayoutSections();
 
-        // Build connections from node positions
-        const double nodeW = 120;
-        const double nodeH = 48;
+        // Build connections from node positions (wider nodes now)
+        const double nodeW = 136;
+        const double nodeH = 52;
         foreach (var node in Nodes)
         {
             if (node.LeftSectionName != null)
@@ -196,13 +208,26 @@ public partial class TrackLayoutViewModel : ObservableObject
                 }
             }
         }
+
+        // Build path view models
+        for (int i = 0; i < _sections.Paths.Count; i++)
+        {
+            var p = _sections.Paths[i];
+            Paths.Add(new TrackPathViewModel
+            {
+                Name = p.Name,
+                SectionCount = p.Sections.Length,
+                IsLoop = p.LoopPath,
+                Color = PathColors[i % PathColors.Length]
+            });
+        }
     }
 
     private void LayoutSections()
     {
         var placed = new HashSet<string>();
-        const double spacingX = 160;
-        const double spacingY = 80;
+        const double spacingX = 175;
+        const double spacingY = 85;
         const int maxCols = 5;
 
         // Find starting section (one not referenced as Left/Right by any other)
