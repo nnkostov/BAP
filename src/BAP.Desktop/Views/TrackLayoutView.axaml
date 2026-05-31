@@ -68,6 +68,70 @@
             </DockPanel>
         </Border>
 
+        <!-- ═══ Simulation controls ═══ -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding Nodes.Count}"
+                Background="#0D0D20" Padding="14,6"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8"
+                            VerticalAlignment="Center">
+                    <Border Width="3" Height="12" CornerRadius="2" Background="#F59E0B" />
+                    <TextBlock Text="SIMULATION" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" LetterSpacing="1"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                    <Button Content="{Binding SimulationButtonText}"
+                            Classes="ghost" FontSize="11" Padding="8,3"
+                            Command="{Binding ToggleSimulationCommand}" />
+                    <Button Classes="accent" FontSize="11" Padding="8,3"
+                            Command="{Binding AddTrainCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="🚂" FontSize="11" VerticalAlignment="Center" />
+                            <TextBlock Text="Add Train" FontSize="11" />
+                        </StackPanel>
+                    </Button>
+                    <Button Content="Clear" Classes="ghost" FontSize="11" Padding="8,3"
+                            Command="{Binding RemoveAllTrainsCommand}" />
+                    <Border Width="1" Background="{StaticResource BorderBrush}" Margin="2,4" />
+                    <TextBlock Text="Speed" FontSize="10" Foreground="{StaticResource TextMutedBrush}"
+                               VerticalAlignment="Center" />
+                    <Slider Minimum="10" Maximum="100" Width="80"
+                            Value="{Binding SimulationSpeed}"
+                            Foreground="{StaticResource AccentBlueBrush}"
+                            VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding SimulationSpeed, StringFormat='{}{0}%'}"
+                               FontSize="10" Foreground="{StaticResource TextBodyBrush}"
+                               VerticalAlignment="Center" Width="30" />
+                </StackPanel>
+                <!-- Active trains list -->
+                <ItemsControl ItemsSource="{Binding Trains}" Margin="16,0,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:TrainMarkerViewModel">
+                            <Border CornerRadius="10" Padding="8,2" Background="#161630"
+                                    BorderBrush="{Binding Color}" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Ellipse Width="6" Height="6" Fill="{Binding Color}"
+                                             VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" FontSize="10"
+                                               Foreground="{StaticResource TextBodyBrush}" />
+                                    <TextBlock Text="{Binding CurrentSectionName, StringFormat='@ {0}'}"
+                                               FontSize="9" Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Text="⏸" FontSize="8" IsVisible="{Binding IsWaiting}"
+                                               Foreground="#FBBF24" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
         <!-- ═══ Main content: Track + Property Panel ═══ -->
         <Grid ColumnDefinitions="*,Auto">
 
@@ -126,13 +190,56 @@
                     </Border>
 
                     <!-- Hint -->
-                    <TextBlock Text="Click a section to select · Drag to move"
+                    <TextBlock Text="Click to select · Drag to move · Add trains to simulate"
                                FontSize="10" Foreground="#334155"
                                HorizontalAlignment="Left" VerticalAlignment="Bottom"
                                Margin="14,0,0,14" ZIndex="1" />
 
                     <!-- Connection lines -->
                     <Canvas Name="ConnectionCanvas" />
+
+                    <!-- Train markers -->
+                    <ItemsControl ItemsSource="{Binding Trains}" Name="TrainItems">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerTheme>
+                            <ControlTheme TargetType="ContentPresenter" x:DataType="vm:TrainMarkerViewModel">
+                                <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                                <Setter Property="ZIndex" Value="10" />
+                            </ControlTheme>
+                        </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:TrainMarkerViewModel">
+                                <Panel Margin="-14,-14">
+                                    <!-- Outer glow -->
+                                    <Ellipse Width="28" Height="28"
+                                             Fill="{Binding Color}" Opacity="0.2" />
+                                    <!-- Main circle -->
+                                    <Ellipse Width="20" Height="20" Margin="4"
+                                             Fill="{Binding Color}" />
+                                    <!-- Train icon -->
+                                    <TextBlock Text="🚂" FontSize="10"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Margin="0,-1,0,0" />
+                                    <!-- Name label -->
+                                    <TextBlock Text="{Binding Name}" FontSize="8" FontWeight="Bold"
+                                               Foreground="White" HorizontalAlignment="Center"
+                                               Margin="0,26,0,0" />
+                                    <!-- Waiting indicator -->
+                                    <Border IsVisible="{Binding IsWaiting}"
+                                            CornerRadius="6" Padding="3,1" Background="#FBBF24"
+                                            HorizontalAlignment="Center" Margin="0,-20,0,0">
+                                        <TextBlock Text="WAIT" FontSize="6" FontWeight="Bold"
+                                                   Foreground="#0C0C1D" />
+                                    </Border>
+                                </Panel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
                     <!-- Section nodes -->
                     <ItemsControl ItemsSource="{Binding Nodes}" Name="NodeItems">

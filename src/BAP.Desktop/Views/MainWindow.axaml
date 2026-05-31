@@ -18,6 +18,8 @@
         <KeyBinding Gesture="Ctrl+P" Command="{Binding AddProgramCommand}" />
         <KeyBinding Gesture="Ctrl+L" Command="{Binding Console.ClearCommand}" />
         <KeyBinding Gesture="Ctrl+D" Command="{Binding Track.LoadDemoTrackCommand}" />
+        <KeyBinding Gesture="Ctrl+T" Command="{Binding Track.AddTrainCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+T" Command="{Binding Track.ToggleSimulationCommand}" />
     </Window.KeyBindings>
 
     <DockPanel>
