@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BAP.Desktop.ViewModels"
+             x:Class="BAP.Desktop.Views.TrackLayoutView"
+             x:DataType="vm:TrackLayoutViewModel"
+             Background="{StaticResource BgBaseBrush}">
+
+    <DockPanel>
+        <!-- Panel header -->
+        <Border DockPanel.Dock="Top" Classes="panel-header">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                    <Button Content="+ Section" Classes="ghost" FontSize="11"
+                            Command="{Binding AddSectionCommand}" />
+                    <Button Content="− Remove" Classes="ghost" FontSize="11"
+                            Command="{Binding RemoveLastSectionCommand}" />
+                    <Border Width="1" Background="{StaticResource BorderBrush}" Margin="4,4" />
+                    <Button Content="Load Demo" Classes="accent" FontSize="11"
+                            Command="{Binding LoadDemoTrackCommand}" />
+                </StackPanel>
+                <StackPanel Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="14" CornerRadius="2"
+                                Background="{StaticResource AccentBlueBrush}" />
+                        <TextBlock Text="TRACK LAYOUT" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TextHBrush}"
+                                   LetterSpacing="1.5" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Nodes.Count, StringFormat='{}{0} sections'}"
+                               FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                               Margin="11,0,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Track canvas -->
+        <Panel>
+            <!-- Empty state -->
+            <StackPanel IsVisible="{Binding !Nodes.Count}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="8" Margin="20">
+                <Border Width="64" Height="64" CornerRadius="32"
+                        Background="#1A5B8DEF" HorizontalAlignment="Center">
+                    <TextBlock Text="⬡" FontSize="28" Foreground="{StaticResource AccentBlueBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="No track layout" FontSize="16" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
+                <TextBlock Text="Add sections or load the demo track"
+                           FontSize="12" HorizontalAlignment="Center"
+                           Foreground="{StaticResource TextMutedBrush}" />
+            </StackPanel>
+
+            <!-- Track rendering -->
+            <Panel IsVisible="{Binding Nodes.Count}" ClipToBounds="True">
+                <!-- Legend -->
+                <StackPanel Orientation="Horizontal" Spacing="16" Margin="12"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            ZIndex="1">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Ellipse Width="8" Height="8" Fill="#10B981" />
+                        <TextBlock Text="Free" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Ellipse Width="8" Height="8" Fill="#FBBF24" />
+                        <TextBlock Text="Reserved" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Ellipse Width="8" Height="8" Fill="#EF4444" />
+                        <TextBlock Text="Occupied" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="⑂" FontSize="12" Foreground="{StaticResource AccentCyanBrush}" />
+                        <TextBlock Text="Switch" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Connection lines -->
+                <Canvas Name="ConnectionCanvas" />
+
+                <!-- Section nodes -->
+                <ItemsControl ItemsSource="{Binding Nodes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemContainerTheme>
+                        <ControlTheme TargetType="ContentPresenter" x:DataType="vm:TrackNodeViewModel">
+                            <Setter Property="Canvas.Left" Value="{Binding X}" />
+                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                        </ControlTheme>
+                    </ItemsControl.ItemContainerTheme>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:TrackNodeViewModel">
+                            <Border Width="120" Height="48" CornerRadius="6"
+                                    BorderThickness="2" Padding="8,4"
+                                    Background="{StaticResource BgCardBrush}"
+                                    BorderBrush="#10B981">
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" IsVisible="{Binding HasSwitch}"
+                                                   Text="⑂" FontSize="14"
+                                                   Foreground="{StaticResource AccentCyanBrush}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontSize="11" FontWeight="Bold"
+                                                   Foreground="{StaticResource TextHBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right"
+                                                   Text="{Binding MaxSpeed, StringFormat='{}{0}%'}"
+                                                   FontSize="9" Foreground="{StaticResource TextMutedBrush}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <Ellipse Width="6" Height="6" Fill="#10B981"
+                                                     VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding StatusLabel}" FontSize="9"
+                                                       Foreground="{StaticResource TextMutedBrush}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Panel>
+        </Panel>
+    </DockPanel>
+</UserControl>

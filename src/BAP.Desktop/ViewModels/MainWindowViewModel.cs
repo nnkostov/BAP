@@ -20,6 +20,7 @@ public partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<HubViewModel> Hubs { get; } = [];
     public ObservableCollection<ProgramViewModel> Programs { get; } = [];
     public ConsoleViewModel Console => _console;
+    public TrackLayoutViewModel Track { get; }
 
     public MainWindowViewModel(
         IProjectRepository projectRepository,
@@ -29,6 +30,7 @@ public partial class MainWindowViewModel : ObservableObject
         _projectRepository = projectRepository;
         _hubConnectionFactory = hubConnectionFactory;
         _console = console;
+        Track = new TrackLayoutViewModel(_project.Sections, _console);
 
         _console.WriteLine("Brick Automation Project initialized", ConsoleEntryLevel.Success);
         _console.WriteLine("Ready to scan for LEGO hubs...");
@@ -40,6 +42,7 @@ public partial class MainWindowViewModel : ObservableObject
         _project = new TrainProjectModel();
         Hubs.Clear();
         Programs.Clear();
+        Track.RebuildLayout();
         _console.WriteLine("New project created");
         return Task.CompletedTask;
     }
@@ -124,5 +127,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         foreach (var program in _project.Programs)
             Programs.Add(new ProgramViewModel(program));
+
+        Track.RebuildLayout();
     }
 }

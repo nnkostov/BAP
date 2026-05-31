@@ -5,8 +5,8 @@
         x:Class="BAP.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
-        Width="1100" Height="700"
-        MinWidth="800" MinHeight="500"
+        Width="1200" Height="750"
+        MinWidth="900" MinHeight="550"
         Background="{StaticResource BgBaseBrush}">
 
     <Design.DataContext>
@@ -17,6 +17,7 @@
         <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProjectCommand}" />
         <KeyBinding Gesture="Ctrl+P" Command="{Binding AddProgramCommand}" />
         <KeyBinding Gesture="Ctrl+L" Command="{Binding Console.ClearCommand}" />
+        <KeyBinding Gesture="Ctrl+D" Command="{Binding Track.LoadDemoTrackCommand}" />
     </Window.KeyBindings>
 
     <DockPanel>
@@ -25,7 +26,6 @@
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
                 Padding="12,6">
             <DockPanel>
-                <!-- Right: project actions -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
                     <Button Content="New" Classes="toolbar" Command="{Binding NewProjectCommand}" />
                     <Button Content="Open" Classes="toolbar" Command="{Binding LoadProjectCommand}" />
@@ -34,8 +34,6 @@
                     <TextBlock Text="v2.0" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
                                VerticalAlignment="Center" />
                 </StackPanel>
-
-                <!-- Left: app name -->
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <TextBlock Text="◆" FontSize="16" Foreground="{StaticResource AccentBlueBrush}" />
                     <TextBlock Text="Brick Automation Project" FontSize="14" FontWeight="Bold"
@@ -45,22 +43,34 @@
         </Border>
 
         <!-- ═══ Console (bottom, always visible) ═══ -->
-        <Border DockPanel.Dock="Bottom" Height="160"
+        <Border DockPanel.Dock="Bottom" Height="140"
                 Background="{StaticResource BgPanelBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
             <views:ConsoleView DataContext="{Binding Console}" />
         </Border>
 
-        <!-- ═══ Main content: Hubs (left) | Programs (right) ═══ -->
-        <Grid ColumnDefinitions="*,1,*">
-            <!-- Hubs panel -->
-            <views:HubListView Grid.Column="0" DataContext="{Binding}" />
+        <!-- ═══ Main area: Sidebar (left) | Track (center) ═══ -->
+        <Grid ColumnDefinitions="240,1,*">
+
+            <!-- ─── Left sidebar: Hubs + Programs stacked ─── -->
+            <Border Grid.Column="0" Background="{StaticResource BgPanelBrush}">
+                <Grid RowDefinitions="*,1,*">
+                    <!-- Hubs panel (top half) -->
+                    <views:HubListView Grid.Row="0" DataContext="{Binding}" />
+
+                    <!-- Divider -->
+                    <Border Grid.Row="1" Background="{StaticResource BorderBrush}" />
+
+                    <!-- Programs panel (bottom half) -->
+                    <views:ProgramListView Grid.Row="2" DataContext="{Binding}" />
+                </Grid>
+            </Border>
 
             <!-- Divider -->
             <Border Grid.Column="1" Background="{StaticResource BorderBrush}" />
 
-            <!-- Programs panel -->
-            <views:ProgramListView Grid.Column="2" DataContext="{Binding}" />
+            <!-- ─── Track layout (main area) ─── -->
+            <views:TrackLayoutView Grid.Column="2" DataContext="{Binding Track}" />
         </Grid>
     </DockPanel>
 </Window>
