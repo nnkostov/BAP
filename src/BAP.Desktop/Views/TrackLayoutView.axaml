@@ -33,7 +33,7 @@
             </DockPanel>
         </Border>
 
-        <!-- ═══ Paths bar (below header when sections exist) ═══ -->
+        <!-- ═══ Paths bar ═══ -->
         <Border DockPanel.Dock="Top" IsVisible="{Binding Paths.Count}"
                 Background="#0A0A18" Padding="14,6"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
@@ -68,140 +68,265 @@
             </DockPanel>
         </Border>
 
-        <!-- ═══ Track canvas ═══ -->
-        <Panel>
-            <!-- Empty state -->
-            <StackPanel IsVisible="{Binding !Nodes.Count}"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Spacing="12" Margin="20">
-                <Border Width="72" Height="72" CornerRadius="36"
-                        HorizontalAlignment="Center">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#1A5B8DEF" Offset="0" />
-                            <GradientStop Color="#0D22D3EE" Offset="1" />
-                        </LinearGradientBrush>
-                    </Border.Background>
-                    <TextBlock Text="⬡" FontSize="30" Foreground="{StaticResource AccentBlueBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
-                <TextBlock Text="No track layout" FontSize="18" FontWeight="SemiBold"
-                           HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
-                <TextBlock Text="Add sections to build your track, or load the demo"
-                           FontSize="12" HorizontalAlignment="Center"
-                           Foreground="{StaticResource TextMutedBrush}" />
-                <Button Content="Load Demo Track" Classes="accent" FontSize="12"
-                        HorizontalAlignment="Center" Margin="0,8,0,0"
-                        Command="{Binding LoadDemoTrackCommand}" />
-            </StackPanel>
+        <!-- ═══ Main content: Track + Property Panel ═══ -->
+        <Grid ColumnDefinitions="*,Auto">
 
-            <!-- Track rendering -->
-            <Panel IsVisible="{Binding Nodes.Count}" ClipToBounds="True">
-                <!-- Legend (bottom-right, floating) -->
-                <Border CornerRadius="8" Padding="10,6" Margin="12"
-                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                        Background="#CC0A0A18" ZIndex="1">
-                    <StackPanel Orientation="Horizontal" Spacing="14">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Ellipse Width="8" Height="8" Fill="#10B981" />
-                            <TextBlock Text="Free" FontSize="10" Foreground="#64748B" />
+            <!-- ═══ Track canvas ═══ -->
+            <Panel Grid.Column="0" Name="TrackPanel">
+                <!-- Empty state -->
+                <StackPanel IsVisible="{Binding !Nodes.Count}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Spacing="12" Margin="20">
+                    <Border Width="72" Height="72" CornerRadius="36"
+                            HorizontalAlignment="Center">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#1A5B8DEF" Offset="0" />
+                                <GradientStop Color="#0D22D3EE" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="⬡" FontSize="30" Foreground="{StaticResource AccentBlueBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="No track layout" FontSize="18" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
+                    <TextBlock Text="Add sections to build your track, or load the demo"
+                               FontSize="12" HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}" />
+                    <Button Content="Load Demo Track" Classes="accent" FontSize="12"
+                            HorizontalAlignment="Center" Margin="0,8,0,0"
+                            Command="{Binding LoadDemoTrackCommand}" />
+                </StackPanel>
+
+                <!-- Track rendering -->
+                <Panel IsVisible="{Binding Nodes.Count}" ClipToBounds="True"
+                       Name="TrackCanvas">
+                    <!-- Legend -->
+                    <Border CornerRadius="8" Padding="10,6" Margin="12"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            Background="#CC0A0A18" ZIndex="1">
+                        <StackPanel Orientation="Horizontal" Spacing="14">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Ellipse Width="8" Height="8" Fill="#10B981" />
+                                <TextBlock Text="Free" FontSize="10" Foreground="#64748B" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Ellipse Width="8" Height="8" Fill="#FBBF24" />
+                                <TextBlock Text="Reserved" FontSize="10" Foreground="#64748B" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Ellipse Width="8" Height="8" Fill="#EF4444" />
+                                <TextBlock Text="Occupied" FontSize="10" Foreground="#64748B" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="⑂" FontSize="11" Foreground="#22D3EE" FontWeight="Bold" />
+                                <TextBlock Text="Switch" FontSize="10" Foreground="#64748B" />
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Ellipse Width="8" Height="8" Fill="#FBBF24" />
-                            <TextBlock Text="Reserved" FontSize="10" Foreground="#64748B" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Ellipse Width="8" Height="8" Fill="#EF4444" />
-                            <TextBlock Text="Occupied" FontSize="10" Foreground="#64748B" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="⑂" FontSize="11" Foreground="#22D3EE" FontWeight="Bold" />
-                            <TextBlock Text="Switch" FontSize="10" Foreground="#64748B" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
+                    </Border>
 
-                <!-- Connection lines (bezier curves drawn in code-behind) -->
-                <Canvas Name="ConnectionCanvas" />
+                    <!-- Hint -->
+                    <TextBlock Text="Click a section to select · Drag to move"
+                               FontSize="10" Foreground="#334155"
+                               HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                               Margin="14,0,0,14" ZIndex="1" />
 
-                <!-- Section nodes -->
-                <ItemsControl ItemsSource="{Binding Nodes}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <Canvas />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemContainerTheme>
-                        <ControlTheme TargetType="ContentPresenter" x:DataType="vm:TrackNodeViewModel">
-                            <Setter Property="Canvas.Left" Value="{Binding X}" />
-                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
-                        </ControlTheme>
-                    </ItemsControl.ItemContainerTheme>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="vm:TrackNodeViewModel">
-                            <!-- Outer glow wrapper -->
-                            <Panel>
-                                <!-- Glow shadow -->
-                                <Border Width="140" Height="56" CornerRadius="10"
-                                        Background="#0D5B8DEF" Margin="-2" />
+                    <!-- Connection lines -->
+                    <Canvas Name="ConnectionCanvas" />
 
-                                <!-- Main card -->
-                                <Border Width="136" Height="52" CornerRadius="8"
-                                        BorderThickness="1.5" ClipToBounds="True"
-                                        BorderBrush="#10B981">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#1E1E40" Offset="0" />
-                                            <GradientStop Color="#161630" Offset="1" />
-                                        </LinearGradientBrush>
-                                    </Border.Background>
+                    <!-- Section nodes -->
+                    <ItemsControl ItemsSource="{Binding Nodes}" Name="NodeItems">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerTheme>
+                            <ControlTheme TargetType="ContentPresenter" x:DataType="vm:TrackNodeViewModel">
+                                <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                            </ControlTheme>
+                        </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:TrackNodeViewModel">
+                                <Panel Name="NodePanel" Cursor="Hand">
+                                    <!-- Glow (changes on selection) -->
+                                    <Border Width="140" Height="56" CornerRadius="10"
+                                            Margin="-2"
+                                            Opacity="0.15"
+                                            Background="{Binding BorderColor}" />
 
-                                    <Grid ColumnDefinitions="4,*">
-                                        <!-- Left accent stripe -->
-                                        <Border Grid.Column="0" CornerRadius="8,0,0,8"
-                                                Background="#10B981" />
+                                    <!-- Main card -->
+                                    <Border Width="136" Height="52" CornerRadius="8"
+                                            BorderThickness="1.5" ClipToBounds="True"
+                                            BorderBrush="{Binding BorderColor}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#1E1E40" Offset="0" />
+                                                <GradientStop Color="#161630" Offset="1" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
 
-                                        <!-- Content -->
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center"
-                                                    Margin="8,0,8,0" Spacing="3">
-                                            <!-- Top row: name + switch icon -->
-                                            <DockPanel>
-                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
-                                                    <TextBlock IsVisible="{Binding HasDetector}"
-                                                               Text="◉" FontSize="10"
-                                                               Foreground="#FBBF24" VerticalAlignment="Center" />
-                                                    <TextBlock IsVisible="{Binding HasSwitch}"
-                                                               Text="⑂" FontSize="13" FontWeight="Bold"
-                                                               Foreground="#22D3EE" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                                <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold"
-                                                           Foreground="#E2E8F0"
-                                                           TextTrimming="CharacterEllipsis" />
-                                            </DockPanel>
-                                            <!-- Bottom row: status + speed -->
-                                            <DockPanel>
-                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
-                                                    <TextBlock Text="⚡" FontSize="8" Foreground="#475569"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding MaxSpeed, StringFormat='{}{0}'}"
-                                                               FontSize="10" Foreground="#64748B"
-                                                               FontWeight="SemiBold" />
-                                                </StackPanel>
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <Ellipse Width="7" Height="7" Fill="#10B981"
-                                                             VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding StatusLabel}" FontSize="10"
-                                                               Foreground="#64748B" />
-                                                </StackPanel>
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </Panel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                        <Grid ColumnDefinitions="4,*">
+                                            <Border Grid.Column="0" CornerRadius="8,0,0,8"
+                                                    Background="{Binding StatusColor}" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center"
+                                                        Margin="8,0,8,0" Spacing="3">
+                                                <DockPanel>
+                                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
+                                                        <TextBlock IsVisible="{Binding HasDetector}"
+                                                                   Text="◉" FontSize="10"
+                                                                   Foreground="#FBBF24" VerticalAlignment="Center" />
+                                                        <TextBlock IsVisible="{Binding HasSwitch}"
+                                                                   Text="⑂" FontSize="13" FontWeight="Bold"
+                                                                   Foreground="#22D3EE" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold"
+                                                               Foreground="#E2E8F0"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
+                                                        <TextBlock Text="⚡" FontSize="8" Foreground="#475569"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding MaxSpeed, StringFormat='{}{0}'}"
+                                                                   FontSize="10" Foreground="#64748B"
+                                                                   FontWeight="SemiBold" />
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <Ellipse Width="7" Height="7" Fill="{Binding StatusColor}"
+                                                                 VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StatusLabel}" FontSize="10"
+                                                                   Foreground="#64748B" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Panel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Panel>
             </Panel>
-        </Panel>
+
+            <!-- ═══ Property Inspector (right panel, visible when node selected) ═══ -->
+            <Border Grid.Column="1" Width="220"
+                    IsVisible="{Binding SelectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Background="{StaticResource BgPanelBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0"
+                    Padding="14,10">
+                <DockPanel>
+                    <!-- Header -->
+                    <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,12">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="✕" FontSize="10"
+                                    Classes="ghost" Padding="6,3"
+                                    Command="{Binding DeselectAllCommand}" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Width="3" Height="12" CornerRadius="2"
+                                        Background="{StaticResource AccentCyanBrush}" />
+                                <TextBlock Text="PROPERTIES" FontSize="10" FontWeight="Bold"
+                                           Foreground="{StaticResource TextHBrush}" LetterSpacing="1" />
+                            </StackPanel>
+                        </DockPanel>
+                        <Border Height="1" Background="{StaticResource BorderBrush}" />
+                    </StackPanel>
+
+                    <!-- Actions (bottom) -->
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,12,0,0">
+                        <Border Height="1" Background="{StaticResource BorderBrush}" />
+                        <Button Content="Apply Changes" Classes="accent" FontSize="11"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Command="{Binding ApplyEditsCommand}" />
+                        <Button Content="Delete Section" Classes="danger" FontSize="11"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Command="{Binding DeleteSelectedSectionCommand}" />
+                    </StackPanel>
+
+                    <!-- Fields -->
+                    <ScrollViewer>
+                        <StackPanel Spacing="10">
+                            <!-- Name -->
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Name" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBox Text="{Binding EditName}"
+                                         FontSize="12" Padding="8,6"
+                                         Background="{StaticResource BgInputBrush}"
+                                         Foreground="{StaticResource TextHBrush}"
+                                         BorderBrush="{StaticResource BorderBrush}"
+                                         CornerRadius="4" />
+                            </StackPanel>
+
+                            <!-- Max Speed -->
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Max Speed" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right"
+                                               Text="{Binding EditMaxSpeed, StringFormat='{}{0}%'}"
+                                               FontSize="11" Foreground="{StaticResource TextBodyBrush}"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                    <Slider Minimum="0" Maximum="100"
+                                            Value="{Binding EditMaxSpeed}"
+                                            Foreground="{StaticResource AccentBlueBrush}" />
+                                </DockPanel>
+                            </StackPanel>
+
+                            <!-- Left Section (Next) -->
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Next Section (Left)" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBox Text="{Binding EditLeftSection}"
+                                         FontSize="12" Padding="8,6"
+                                         Watermark="none"
+                                         Background="{StaticResource BgInputBrush}"
+                                         Foreground="{StaticResource TextHBrush}"
+                                         BorderBrush="{StaticResource BorderBrush}"
+                                         CornerRadius="4" />
+                            </StackPanel>
+
+                            <!-- Right Section (Branch) -->
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Branch Section (Right)" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBox Text="{Binding EditRightSection}"
+                                         FontSize="12" Padding="8,6"
+                                         Watermark="none (switch)"
+                                         Background="{StaticResource BgInputBrush}"
+                                         Foreground="{StaticResource TextHBrush}"
+                                         BorderBrush="{StaticResource BorderBrush}"
+                                         CornerRadius="4" />
+                            </StackPanel>
+
+                            <!-- Info -->
+                            <Border CornerRadius="6" Background="#0D5B8DEF" Padding="10,8" Margin="0,4,0,0">
+                                <StackPanel Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Ellipse Width="7" Height="7"
+                                                 Fill="{Binding SelectedNode.StatusColor}"
+                                                 VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding SelectedNode.StatusLabel}"
+                                                   FontSize="11" Foreground="{StaticResource TextBodyBrush}" />
+                                    </StackPanel>
+                                    <TextBlock IsVisible="{Binding SelectedNode.HasSwitch}"
+                                               FontSize="10" Foreground="{StaticResource AccentCyanBrush}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="⑂ Switch → {0}">
+                                                <Binding Path="SelectedNode.RightSectionName" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

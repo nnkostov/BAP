@@ -15,6 +15,7 @@ public partial class TrackNodeViewModel : ObservableObject
     [ObservableProperty] private string _statusLabel = "Free";
     [ObservableProperty] private bool _isOccupied;
     [ObservableProperty] private bool _isReserved;
+    [ObservableProperty] private bool _isSelected;
 
     public string? LeftSectionName => _model.LeftSectionName;
     public string? RightSectionName => _model.RightSectionName;
@@ -23,8 +24,8 @@ public partial class TrackNodeViewModel : ObservableObject
     public int MaxSpeed => _model.MaxSpeed;
     public SectionModel Model => _model;
 
-    /// <summary>Border color as hex string: green=free, amber=reserved, red=occupied.</summary>
-    public string BorderColor => IsOccupied ? "#EF4444" : IsReserved ? "#FBBF24" : "#10B981";
+    public string StatusColor => IsOccupied ? "#EF4444" : IsReserved ? "#FBBF24" : "#10B981";
+    public string BorderColor => IsSelected ? "#5B8DEF" : StatusColor;
 
     public TrackNodeViewModel(SectionModel model, double x, double y)
     {
@@ -55,7 +56,39 @@ public partial class TrackNodeViewModel : ObservableObject
             StatusLabel = "Free";
         }
 
+        OnPropertyChanged(nameof(StatusColor));
         OnPropertyChanged(nameof(BorderColor));
+    }
+
+    partial void OnIsSelectedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(BorderColor));
+    }
+
+    public void UpdateName(string newName)
+    {
+        // Update references in other sections
+        Name = newName;
+        _model.Name = newName;
+    }
+
+    public void UpdateMaxSpeed(int speed)
+    {
+        _model.MaxSpeed = Math.Clamp(speed, 0, 100);
+        OnPropertyChanged(nameof(MaxSpeed));
+    }
+
+    public void SetLeftSection(string? name)
+    {
+        _model.LeftSectionName = name;
+        OnPropertyChanged(nameof(LeftSectionName));
+    }
+
+    public void SetRightSection(string? name)
+    {
+        _model.RightSectionName = name;
+        OnPropertyChanged(nameof(RightSectionName));
+        OnPropertyChanged(nameof(HasSwitch));
     }
 }
 
@@ -79,6 +112,12 @@ public partial class TrackLayoutViewModel : ObservableObject
 
     private static readonly string[] PathColors = ["#5B8DEF", "#22D3EE", "#10B981", "#FBBF24", "#EF4444", "#A78BFA"];
 
+    [ObservableProperty] private TrackNodeViewModel? _selectedNode;
+    [ObservableProperty] private string _editName = string.Empty;
+    [ObservableProperty] private int _editMaxSpeed;
+    [ObservableProperty] private string? _editLeftSection;
+    [ObservableProperty] private string? _editRightSection;
+
     public ObservableCollection<TrackNodeViewModel> Nodes { get; } = [];
     public ObservableCollection<TrackConnectionViewModel> Connections { get; } = [];
     public ObservableCollection<TrackPathViewModel> Paths { get; } = [];
@@ -87,6 +126,109 @@ public partial class TrackLayoutViewModel : ObservableObject
     {
         _sections = sections;
         _console = console;
+    }
+
+    public void SelectNode(TrackNodeViewModel? node)
+    {
+        if (SelectedNode != null)
+            SelectedNode.IsSelected = false;
+
+        SelectedNode = node;
+
+        if (node != null)
+        {
+            node.IsSelected = true;
+            EditName = node.Name;
+            EditMaxSpeed = node.MaxSpeed;
+            EditLeftSection = node.LeftSectionName;
+            EditRightSection = node.RightSectionName;
+        }
+    }
+
+    [RelayCommand]
+    public void DeselectAll()
+    {
+        SelectNode(null);
+    }
+
+    [RelayCommand]
+    private void ApplyEdits()
+    {
+        if (SelectedNode == null) return;
+
+        var oldName = SelectedNode.Name;
+        if (EditName != oldName && !string.IsNullOrWhiteSpace(EditName))
+        {
+            // Update references in all other sections
+            foreach (var s in _sections.Sections)
+            {
+                if (s.LeftSectionName == oldName)
+                    s.LeftSectionName = EditName;
+                if (s.RightSectionName == oldName)
+                    s.RightSectionName = EditName;
+            }
+            SelectedNode.UpdateName(EditName);
+        }
+
+        SelectedNode.UpdateMaxSpeed(EditMaxSpeed);
+        SelectedNode.SetLeftSection(string.IsNullOrWhiteSpace(EditLeftSection) ? null : EditLeftSection);
+        SelectedNode.SetRightSection(string.IsNullOrWhiteSpace(EditRightSection) ? null : EditRightSection);
+
+        RebuildConnections();
+        _console.WriteLine($"Updated section: {SelectedNode.Name}");
+    }
+
+    [RelayCommand]
+    private void DeleteSelectedSection()
+    {
+        if (SelectedNode == null) return;
+
+        var name = SelectedNode.Name;
+        var model = SelectedNode.Model;
+        _sections.Sections.Remove(model);
+
+        foreach (var s in _sections.Sections)
+        {
+            if (s.LeftSectionName == name) s.LeftSectionName = null;
+            if (s.RightSectionName == name) s.RightSectionName = null;
+        }
+
+        SelectNode(null);
+        RebuildLayout();
+        _console.WriteLine($"Deleted section: {name}");
+    }
+
+    public void MoveNode(TrackNodeViewModel node, double newX, double newY)
+    {
+        node.X = Math.Max(0, newX);
+        node.Y = Math.Max(0, newY);
+        RebuildConnections();
+    }
+
+    private void RebuildConnections()
+    {
+        Connections.Clear();
+        const double nodeW = 136;
+        const double nodeH = 52;
+        foreach (var node in Nodes)
+        {
+            if (node.LeftSectionName != null)
+            {
+                var target = FindNode(node.LeftSectionName);
+                if (target != null)
+                    Connections.Add(new TrackConnectionViewModel(
+                        node.X + nodeW, node.Y + nodeH / 2,
+                        target.X, target.Y + nodeH / 2, false));
+            }
+            if (node.RightSectionName != null)
+            {
+                var target = FindNode(node.RightSectionName);
+                if (target != null)
+                    Connections.Add(new TrackConnectionViewModel(
+                        node.X + nodeW, node.Y + nodeH / 2,
+                        target.X, target.Y + nodeH / 2, true));
+            }
+        }
     }
 
     [RelayCommand]
