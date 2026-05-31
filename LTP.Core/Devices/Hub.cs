@@ -7,7 +7,6 @@ using System.Timers;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 using System.Threading;
 using static LegoTrainProject.Port;
@@ -1489,25 +1488,76 @@ namespace LegoTrainProject
 
         internal static void SaveAll(List<Hub> registeredTrains)
         {
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream("./trainAll.txt", FileMode.Create, FileAccess.Write);
-            formatter.Serialize(stream, registeredTrains);
-            stream.Close();
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto,
+                    Formatting = Formatting.Indented
+                };
+                string json = JsonConvert.SerializeObject(registeredTrains, settings);
+                File.WriteAllText("./trainAll.json", json);
+            }
+            catch (Exception ex)
+            {
+                MainBoard.WriteLine("ERROR - Could not save trains: " + ex.Message, Color.Red);
+            }
         }
 
         internal static List<Hub> LoadAll(string path)
         {
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read);
-            List<Hub> trains = null;
+            try
+            {
+                // Try JSON format first (new format)
+                string jsonPath = Path.ChangeExtension(path, ".json");
+                if (File.Exists(jsonPath))
+                {
+                    string json = File.ReadAllText(jsonPath);
+                    var settings = new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.Auto
+                    };
+                    var trains = JsonConvert.DeserializeObject<List<Hub>>(json, settings);
+                    return trains ?? new List<Hub>();
+                }
 
-            if (stream.Length > 0)
-                trains = (List<Hub>)formatter.Deserialize(stream);
+                // Try legacy binary format
+                if (File.Exists(path))
+                {
+                    var legacyTrains = LoadLegacyFormat(path);
+                    if (legacyTrains != null && legacyTrains.Count > 0)
+                    {
+                        SaveAll(legacyTrains);
+                        MainBoard.WriteLine("Train data migrated to JSON format.", Color.Green);
+                        return legacyTrains;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainBoard.WriteLine("ERROR - Could not load trains: " + ex.Message, Color.Red);
+            }
 
-            stream.Close();
-            trains = (trains == null) ? new List<Hub>() : trains;
-
-            return trains;
+            return new List<Hub>();
         }
+
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete
+        private static List<Hub> LoadLegacyFormat(string path)
+        {
+            try
+            {
+                using (Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    if (stream.Length == 0) return null;
+                    var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    return (List<Hub>)formatter.Deserialize(stream);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+#pragma warning restore SYSLIB0011
     }
 }
