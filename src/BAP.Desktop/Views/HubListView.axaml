@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BAP.Desktop.ViewModels"
+             x:Class="BAP.Desktop.Views.HubListView"
+             x:DataType="vm:MainWindowViewModel"
+             Background="{StaticResource BgPanelBrush}">
+
+    <DockPanel>
+        <!-- Panel header -->
+        <Border DockPanel.Dock="Top" Classes="panel-header">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Scan" Classes="accent"
+                        Command="{Binding ScanCommand}" />
+                <StackPanel Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="14" CornerRadius="2"
+                                Background="{StaticResource AccentCyanBrush}" />
+                        <TextBlock Text="HUBS" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TextHBrush}"
+                                   LetterSpacing="1.5" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Hubs.Count, StringFormat='{}{0} connected'}"
+                               FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                               Margin="11,0,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Content -->
+        <Panel>
+            <!-- Empty state -->
+            <StackPanel IsVisible="{Binding !Hubs.Count}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="8" Margin="20">
+                <Border Width="56" Height="56" CornerRadius="28"
+                        Background="#1A5B8DEF" HorizontalAlignment="Center">
+                    <TextBlock Text="⬡" FontSize="24" Foreground="{StaticResource AccentBlueBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="No hubs connected" FontSize="14" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
+                <TextBlock Text="Power on a LEGO hub and press Scan"
+                           FontSize="12" HorizontalAlignment="Center"
+                           Foreground="{StaticResource TextMutedBrush}" />
+            </StackPanel>
+
+            <!-- Hub cards -->
+            <ScrollViewer IsVisible="{Binding Hubs.Count}">
+                <ItemsControl ItemsSource="{Binding Hubs}" Margin="10">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:HubViewModel">
+                            <Border Classes="card">
+                                <StackPanel Spacing="10">
+                                    <!-- Hub identity row -->
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                                            <!-- Battery badge -->
+                                            <Border Classes="badge" Background="#1A10B981">
+                                                <TextBlock Text="{Binding BatteryLevel, StringFormat='{}{0:F0}%'}"
+                                                           FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource SemanticGreenBrush}" />
+                                            </Border>
+                                            <Button Content="Stop All" Classes="danger" FontSize="11" Padding="8,4"
+                                                    Command="{Binding StopAllCommand}" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{StaticResource TextHBrush}" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding TypeName}" FontSize="11"
+                                                           Foreground="{StaticResource TextMutedBrush}" />
+                                                <Border Classes="badge" IsVisible="{Binding IsConnected}"
+                                                        Background="#1A22D3EE">
+                                                    <TextBlock Text="Connected" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource AccentCyanBrush}" />
+                                                </Border>
+                                                <Border Classes="badge" IsVisible="{Binding !IsConnected}"
+                                                        Background="#1AEF4444">
+                                                    <TextBlock Text="Offline" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource SemanticRedBrush}" />
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <!-- Separator -->
+                                    <Border Height="1" Background="{StaticResource BorderBrush}" />
+
+                                    <!-- Ports grid -->
+                                    <ItemsControl ItemsSource="{Binding Ports}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="vm:PortViewModel">
+                                                <Border Margin="0,0,6,6" Padding="10" CornerRadius="6"
+                                                        Background="{StaticResource BgInputBrush}"
+                                                        BorderBrush="{StaticResource BorderBrush}"
+                                                        BorderThickness="1"
+                                                        IsVisible="{Binding HasUI}" MinWidth="130">
+                                                    <StackPanel Spacing="6">
+                                                        <TextBlock Text="{Binding Id, StringFormat='Port {0}'}"
+                                                                   FontSize="11" FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentBlueBrush}" />
+
+                                                        <!-- Motor -->
+                                                        <StackPanel IsVisible="{Binding IsMotor}" Spacing="4">
+                                                            <Slider Minimum="-100" Maximum="100"
+                                                                    Value="{Binding Speed}" Width="110"
+                                                                    TickFrequency="10" IsSnapToTickEnabled="True" />
+                                                            <DockPanel>
+                                                                <Button DockPanel.Dock="Right" Content="Stop"
+                                                                        Classes="ghost" Command="{Binding StopCommand}"
+                                                                        FontSize="10" Padding="6,2" />
+                                                                <TextBlock Text="{Binding Speed, StringFormat='{}{0}%'}"
+                                                                           FontSize="11"
+                                                                           Foreground="{StaticResource TextMutedBrush}" />
+                                                            </DockPanel>
+                                                        </StackPanel>
+
+                                                        <!-- Switch -->
+                                                        <StackPanel IsVisible="{Binding IsSwitch}"
+                                                                    Orientation="Horizontal" Spacing="4">
+                                                            <Button Content="◄" Classes="ghost"
+                                                                    Command="{Binding SwitchLeftCommand}"
+                                                                    FontSize="11" Padding="8,4" />
+                                                            <Button Content="►" Classes="ghost"
+                                                                    Command="{Binding SwitchRightCommand}"
+                                                                    FontSize="11" Padding="8,4" />
+                                                        </StackPanel>
+
+                                                        <!-- Sensor -->
+                                                        <StackPanel IsVisible="{Binding IsSensor}" Spacing="2">
+                                                            <TextBlock Text="{Binding ColorLabel, StringFormat='Color: {0}'}"
+                                                                       FontSize="11" Foreground="{StaticResource TextBodyBrush}" />
+                                                            <TextBlock Text="{Binding Distance, StringFormat='Dist: {0}'}"
+                                                                       FontSize="11" Foreground="{StaticResource TextBodyBrush}" />
+                                                        </StackPanel>
+
+                                                        <!-- Light -->
+                                                        <StackPanel IsVisible="{Binding IsLight}" Spacing="4">
+                                                            <Slider Minimum="0" Maximum="100"
+                                                                    Value="{Binding Speed}" Width="110" />
+                                                            <TextBlock Text="{Binding Speed, StringFormat='Brightness: {0}%'}"
+                                                                       FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+</UserControl>

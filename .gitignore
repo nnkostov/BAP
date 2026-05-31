@@ -48,3 +48,8 @@ Temporary Items
 .vs
 bin
 obj
+publish
+*.user
+*.suo
+.idea
+*.DotSettings.user

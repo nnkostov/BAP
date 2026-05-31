@@ -1,161 +1,176 @@
-# The Brick Automation Project
+# The Brick Automation Project (BAP)
 
-Welcome to "The Brick Automation Project" V1.5!
+A cross-platform desktop application for controlling LEGO trains and motorized devices over Bluetooth Low Energy (BLE).
 
-This software is free and developped for the community of AFOL!
-I am extremely grateful to the following people for their kind donation.
+Built with [Avalonia UI](https://avaloniaui.net/) and .NET 9 — runs on **Windows**, **macOS**, and **Linux**.
 
-Top Donors:
- - David G.
- - Markus W.
- - Jacek H. 
- - Jade124
- - Martin H. 
- - Georg D.
- - Andrew H.
- - Isaac M.
- - Fabian W.
- 
-As of June 27th 2020, I have decided to share the source code of this project as I don't find time to work anymore on it.
-I share it as-is, with its flaws :)
+## Features
 
-V1.5 is out -  08/21/19
-----------------------------
-- Control+ Hub - Implementation complete, including new L + XL Technic engines
-- Fix a bug with EV3 preventing the use of more than one sensor at a time
-- Fix a UI bug related to the Section part of the Self-Driving Module. That section now properly redraws after window resize.
+- **8 Hub Types** — Powered Up Hub, Boost Move Hub, Powered Up Remote, WeDo 2.0, SBrick, BuWizz, PFx Brick, EV3
+- **Motor & Light Control** — per-port speed sliders, switch left/right, LED color, light brightness
+- **Sensor Monitoring** — color sensors, distance sensors, battery level, remote buttons
+- **Event Programming** — trigger → action rules (e.g., "when color sensor sees red → stop motor A")
+- **C# Scripting** — write custom automation scripts with Roslyn (access hubs, motors, sensors from code)
+- **Self-Driving System** — block-based anti-collision with section reservation, path following, automatic switch control
+- **JSON Project Files** — human-readable `.bap` project files (replaces legacy binary format)
 
-V1.4 is out -  08/18/19
-----------------------------
-- The long awaited feature to limit connectivity to a list of devices during convention is done!
- * Choose between Project-Only limitation or Specific-List limitation.
-- Fix ports of Boot Move Hub on latest firmware (Star Wars Boost Hub)
+## Architecture
 
-V1.3 is out -  05/04/19
-----------------------------
-- Update how motor are control to support latest PUP hardware.
-- Alpha status because untested due to urgency of build an no availble hardware to test changes.
+```
+BAP.sln
+├── src/BAP.Core        Domain models, interfaces, DI registration
+├── src/BAP.Ble         BLE protocols, hub connections, scripting engine
+├── src/BAP.Desktop     Avalonia UI with MVVM (CommunityToolkit.Mvvm)
+└── tests/BAP.Tests     xUnit unit tests
+```
 
-V1.2 is out -  03/16/19
-----------------------------
-- BuWizz - Implementation
-- Play Sound implementation in the Event section
+Clean architecture with dependency injection. Protocol implementations are behind `IHubConnection` / `IBleAdapter` interfaces for testability and cross-platform support.
 
+## Getting Started
 
-V1.1 is out -  02/19/19
-----------------------------
-- PFx - First implementation
-- Improvement: Better Section Reservation for Self-Driving System.
-- Bug Fix: Show proper battery level of remote controls
-- Bug Fix: Motor Slider now properly show negative speed.
-- Bug Fix: EV3 Motors properly activate on their ports.
-- Bug Fix: Train not stopping immediately in Self-Driving module
+### Prerequisites
 
-V1.0.1 is out -  Hot Fix - 02/11/19
-----------------------------
-- Bug Fix: Remove hard-coded COM5 for EV3 connection and properly uses the COM input by the user
-- Improvement: Stretch the length of the Hub names to allow Battery % to show up
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 
-V1.0 is officially released - 02/10/19
-----------------------------
-- New Name: The Brick Automation Project
-- EV3 Support!
-- Fix of SBrick port (port B and C were inverted)
-- Add 'Released' event for PUP Remotes
-- Fix Battery Level Not Showing up for PUP Hubs
-- Introduce official terms of service
+### Build & Run
 
-V0.9 is out - 02/03/19
-----------------------------
-- WeDo 2.0 Support
-- Fix SBrick Sensor Calibration
-- Fix Saving Issue with Remote Control
+```bash
+# Clone
+git clone https://github.com/nnkostov/BAP.git
+cd BAP
 
+# Build
+dotnet build BAP.sln
 
-V0.8 is out - 02/02/19
-----------------------------
-- Remote Control Support
-- LED Color Configuration
-- Allow to start and stop scanning
-- Allow to disconnect single devices
+# Run
+dotnet run --project src/BAP.Desktop
 
-- Programming:
- * Support for Custom Trigger Events
- * Change the color of LEDs programmatically
+# Test
+dotnet test BAP.sln
+```
 
-- Self-Driving module: 
- * Implement Green/Red lights based on Section occupation.
- * Fix a bug with looped Paths
+### Publish (Self-Contained)
 
-V0.7.1 is out - 01/28/19
-----------------------------
+Build a single-file executable for your platform:
 
-- Programming:
- * Fix a bug preventing the access of custom code with events.
+```bash
+# Windows
+dotnet publish src/BAP.Desktop -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish/win-x64
 
-- Self-Driving module: 
- * Fix a bug preventing the deletion of Paths.
- * Fix a bug with 'Clear 2 Sections' in the Self-Driving Module 
+# macOS (Apple Silicon)
+dotnet publish src/BAP.Desktop -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -o publish/osx-arm64
 
+# macOS (Intel)
+dotnet publish src/BAP.Desktop -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -o publish/osx-x64
 
-V0.7 is out - 01/28/19
-----------------------------
+# Linux
+dotnet publish src/BAP.Desktop -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o publish/linux-x64
+```
 
-- Programming:
-  * Plenty of new properties are now available
-  * You can name sequences
-  * You can customize distance/color trigger cooldown
+## Supported Hubs
 
- - Self-Driving module: 
-  * You can now customize clearing time and 'stop needed ahead' speed
-  * Add capacity to wait for the next 2 sections to clear
-  * Allow to run code when next section releases
-  * Speed Coefficient, to slow or accelerate trains based on battery level.
+| Hub | Protocol | Status |
+|-----|----------|--------|
+| LEGO Powered Up Hub | LPF2 | Supported |
+| LEGO Boost Move Hub | LPF2 | Supported |
+| LEGO Powered Up Remote | LPF2 | Supported |
+| SBrick | SBrick BLE | Supported |
+| WeDo 2.0 | WeDo BLE | Supported |
+| BuWizz | BuWizz BLE | Supported |
+| PFx Brick | PFx BLE | Supported |
+| LEGO EV3 | Serial/SPP | Not yet ported (serial, not BLE) |
 
+## Scripting Example
 
-V0.6 is out - 01/20/19
-----------------------------
- 
-- Self-Driving Trains!
-- New UI
-- More Robust Hub Detection
-- Add Port Selection for Sensor Events
-- Bug Fixes
+```csharp
+// Move train forward for 3 seconds, then stop
+await SetMotorSpeed(0, "A", 75);
+WriteLine("Train moving...");
+await Wait(3000);
+await Stop(0, "A");
+WriteLine("Done!");
+```
 
+Scripts have access to `Hub[]`, `Sections`, `Global[]`, `Wait()`, `WriteLine()`, `SetMotorSpeed()`, and `Stop()`.
 
-V0.5 is out - 01/14/19
-----------------------------
+## CI
 
-Major update includes:
-- Full support of SBrick Plus and PF Sensors.
-- Introducting an Anti-Collision system that works with simple distance detectors
-- Bug fix: Code was executed twice on sensor event
-- Bug fix: Better handling of faulty device connection
+GitHub Actions runs build + test on every push and PR across Windows, macOS, and Linux. Artifacts are published on merges to main.
 
- 
-V0.4 is out - 01/14/19
-----------------------------
+## Legacy Version
 
-Major update includes:
-- SBrick support
-- Global code editor
+The original WinForms application (V1.5, .NET Framework 4.6.1) source code is preserved in the `LTP.Core/` and `LTP.Desktop/` directories for reference.
 
- 
-V0.3 is out - 12/26/18
-----------------------------
+---
 
-Major update with this version:
-- New UI
-- Improved Hub Detection
-- Color In C# Editor
-- Light Management
-- Code editor improvement
-- Fix Hub not showing up on certain configurations
-- Add 'State' variable to each hubs
- 
-Credits
--------
+## Version History
 
-This software uses a couple other awesome open source code:
- - FastColoredTextBox: https://github.com/PavelTorgashov/FastColoredTextBox
- - Lego EV3 Library: https://github.com/BrianPeek/legoev3
+### V2.0.0 — Modernization
+- Migrated from .NET Framework 4.6.1 to .NET 9
+- Replaced WinForms with Avalonia UI (cross-platform)
+- Clean architecture: BAP.Core / BAP.Ble / BAP.Desktop / BAP.Tests
+- Replaced BinaryFormatter with System.Text.Json
+- Replaced CSharpCodeProvider with Roslyn Scripting API
+- Added dependency injection throughout
+- Added 69 unit tests
+- Added GitHub Actions CI (Windows + macOS + Linux)
+
+<details>
+<summary>V1.x Changelog</summary>
+
+#### V1.5 — 08/21/19
+- Control+ Hub support, new L + XL Technic engines
+- Fix EV3 multi-sensor bug, Section UI redraw fix
+
+#### V1.4 — 08/18/19
+- Device connectivity limiting for conventions
+- Fix Boost Move Hub ports on latest firmware
+
+#### V1.3 — 05/04/19
+- Updated motor control for latest PUP hardware
+
+#### V1.2 — 03/16/19
+- BuWizz support, Play Sound in events
+
+#### V1.1 — 02/19/19
+- PFx Brick support, improved section reservation
+- Battery, motor slider, and EV3 motor bug fixes
+
+#### V1.0 — 02/10/19
+- Renamed to "The Brick Automation Project"
+- EV3 support, SBrick port fix, PUP Remote events
+
+#### V0.9 — 02/03/19
+- WeDo 2.0 support, SBrick sensor calibration fix
+
+#### V0.8 — 02/02/19
+- Remote control, LED color config, custom trigger events
+- Self-driving: green/red section lights, looped path fix
+
+#### V0.7 — 01/28/19
+- Programming: new properties, named sequences, trigger cooldown
+- Self-driving: clearing time, 2-section-ahead, speed coefficient
+
+#### V0.6 — 01/20/19
+- Self-driving trains, new UI, port selection for sensors
+
+#### V0.5 — 01/14/19
+- SBrick Plus + PF Sensors, anti-collision system
+
+#### V0.4 — 01/14/19
+- SBrick support, global code editor
+
+#### V0.3 — 12/26/18
+- New UI, improved hub detection, color code editor, light management
+
+</details>
+
+## Credits
+
+- [Avalonia UI](https://avaloniaui.net/) — Cross-platform .NET UI framework
+- [CommunityToolkit.Mvvm](https://learn.microsoft.com/dotnet/communitytoolkit/mvvm/) — MVVM source generators
+- [Roslyn](https://github.com/dotnet/roslyn) — C# scripting engine
+
+## License
+
+This software is free and developed for the community of AFOL (Adult Fans of LEGO).

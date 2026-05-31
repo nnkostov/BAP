@@ -1,0 +1,112 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BAP.Desktop.ViewModels"
+             x:Class="BAP.Desktop.Views.ProgramListView"
+             x:DataType="vm:MainWindowViewModel"
+             Background="{StaticResource BgPanelBrush}">
+
+    <DockPanel>
+        <!-- Panel header -->
+        <Border DockPanel.Dock="Top" Classes="panel-header">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="+ New" Classes="accent"
+                        Command="{Binding AddProgramCommand}" />
+                <StackPanel Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="14" CornerRadius="2"
+                                Background="{StaticResource SemanticGreenBrush}" />
+                        <TextBlock Text="PROGRAMS" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TextHBrush}"
+                                   LetterSpacing="1.5" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Programs.Count, StringFormat='{}{0} programs'}"
+                               FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                               Margin="11,0,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Content -->
+        <Panel>
+            <!-- Empty state -->
+            <StackPanel IsVisible="{Binding !Programs.Count}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="8" Margin="20">
+                <Border Width="56" Height="56" CornerRadius="28"
+                        Background="#1A10B981" HorizontalAlignment="Center">
+                    <TextBlock Text="▶" FontSize="22" Foreground="{StaticResource SemanticGreenBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="No programs yet" FontSize="14" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Foreground="{StaticResource TextBodyBrush}" />
+                <TextBlock Text="Create automations for your trains"
+                           FontSize="12" HorizontalAlignment="Center"
+                           Foreground="{StaticResource TextMutedBrush}" />
+            </StackPanel>
+
+            <!-- Program cards -->
+            <ScrollViewer IsVisible="{Binding Programs.Count}">
+                <ItemsControl ItemsSource="{Binding Programs}" Margin="10">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:ProgramViewModel">
+                            <Border Classes="card">
+                                <StackPanel Spacing="8">
+                                    <!-- Header row -->
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                                            <Button Content="+ Event" Classes="ghost" FontSize="11"
+                                                    Command="{Binding AddEventCommand}" />
+                                            <Button Classes="accent" FontSize="11" Padding="10,5"
+                                                    Command="{Binding ToggleRunningCommand}">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="{Binding RunLabel}" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBox Text="{Binding Name}" FontSize="13" FontWeight="Bold"
+                                                 BorderThickness="0" Background="Transparent"
+                                                 Foreground="{StaticResource TextHBrush}" Padding="0"
+                                                 VerticalAlignment="Center" />
+                                    </DockPanel>
+
+                                    <!-- Events -->
+                                    <ItemsControl ItemsSource="{Binding Events}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="vm:EventViewModel">
+                                                <Border Margin="0,0,0,4" Padding="10,7" CornerRadius="6"
+                                                        Background="{StaticResource BgInputBrush}"
+                                                        BorderBrush="{StaticResource BorderBrush}"
+                                                        BorderThickness="1">
+                                                    <DockPanel>
+                                                        <TextBlock DockPanel.Dock="Right"
+                                                                   Text="{Binding ActionDescription}"
+                                                                   FontSize="12"
+                                                                   Foreground="{StaticResource TextHBrush}" />
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{Binding TriggerDescription}"
+                                                                       FontSize="12"
+                                                                       Foreground="{StaticResource TextMutedBrush}" />
+                                                            <TextBlock Text="→" FontSize="12"
+                                                                       Foreground="{StaticResource AccentBlueBrush}"
+                                                                       FontWeight="Bold" />
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Empty events hint -->
+                                    <TextBlock IsVisible="{Binding !Events.Count}"
+                                               Text="No events yet"
+                                               FontSize="11" FontStyle="Italic"
+                                               Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+</UserControl>
