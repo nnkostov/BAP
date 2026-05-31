@@ -21,7 +21,32 @@ public partial class ConsoleViewModel : ObservableObject
     private void Clear() => Entries.Clear();
 }
 
-public record ConsoleEntry(DateTime Timestamp, string Text, ConsoleEntryLevel Level);
+public record ConsoleEntry(DateTime Timestamp, string Text, ConsoleEntryLevel Level)
+{
+    public string LevelTag => Level switch
+    {
+        ConsoleEntryLevel.Success => "OK",
+        ConsoleEntryLevel.Warning => "WARN",
+        ConsoleEntryLevel.Error => "ERR",
+        _ => "INFO"
+    };
+
+    public string LevelColor => Level switch
+    {
+        ConsoleEntryLevel.Success => "#2ECC71",
+        ConsoleEntryLevel.Warning => "#F5A623",
+        ConsoleEntryLevel.Error => "#E74C3C",
+        _ => "#B0B0C0"
+    };
+
+    public string LevelBadgeBackground => Level switch
+    {
+        ConsoleEntryLevel.Success => "#1A2ECC71",
+        ConsoleEntryLevel.Warning => "#1AF5A623",
+        ConsoleEntryLevel.Error => "#1AE74C3C",
+        _ => "#1A6B6B7B"
+    };
+}
 
 public enum ConsoleEntryLevel
 {

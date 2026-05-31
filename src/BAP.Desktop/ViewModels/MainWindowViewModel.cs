@@ -92,6 +92,22 @@ public partial class MainWindowViewModel : ObservableObject
         Programs.Remove(programVm);
     }
 
+    [RelayCommand]
+    private async Task Scan()
+    {
+        IsScanning = true;
+        _console.WriteLine("Scanning for BLE hubs...");
+        try
+        {
+            await Task.Delay(2000);
+            _console.WriteLine("Scan complete — no hubs found (connect hardware to discover hubs)", ConsoleEntryLevel.Warning);
+        }
+        finally
+        {
+            IsScanning = false;
+        }
+    }
+
     private void SyncViewModelsToModel()
     {
         _project.RegisteredTrains.Clear();
