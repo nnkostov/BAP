@@ -68,7 +68,7 @@ namespace LegoTrainProject
 			//generate 456976 words
 			var keyword = new List<string>()
 			{
-				".SetMotorSpeed(\"A\", 100);", ".GetMotorSpeed(\"A\");", ".RampMotorSpeed(\"A\", 100, 1000);", ".Stop(\"A\");", ".Wait(1000);", ".ActivateSwitchOnLeft(\"A\");", ".ActivateSwitchOnRight(\"A\");", ".State[]", ".WriteLine(\"\")"
+				".SetMotorSpeed(\"A\", 100);", ".GetMotorSpeed(\"A\");", ".RampMotorSpeed(\"A\", 100, 1000);", ".Stop(\"A\");", ".Wait(1000);", ".ActivateSwitchToLeft(\"A\");", ".ActivateSwitchToRight(\"A\");", ".State[]", ".WriteLine(\"\")"
 			};
 
 			popupMenu.ForeColor = Color.White;
