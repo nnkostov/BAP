@@ -61,7 +61,7 @@ Properties/                AssemblyInfo, Resources.resx (icons in Resources/), S
 
 The `Execute_Code` actions, the global code tab, and the section "Execute Code" release action all splice user text into the `TrainProgramEvent.Code` template. They replace `Wait(` with `await Task.Delay(` and compile with `CSharpCodeProvider` against `System.dll`, `System.Windows.Forms.dll`, `System.Drawing.dll` and **`LegoTrainProject.exe`**. The result runs `DynamicCode.ExecuteCode(TrainProgramEvent e, List<Hub> Hub, Sections Sections)` on a new thread.
 
-So the **public members of `Hub`, `Port`, `Sections`, `TrainProgram` (including `TrainProgram.Global`) and `MainBoard.WriteLine` are a scripting API**, and users' saved projects contain code that calls them. Don't rename or remove public members or change their signatures. Add new members instead. The code editor's hard-coded autocomplete list in `FormCodeEditor.cs` should be kept in sync with that API. It's currently out of sync: it suggests `ActivateSwitchOnLeft/OnRight`, but the real methods are `ActivateSwitchToLeft/ToRight`.
+So the **public members of `Hub`, `Port`, `Sections`, `TrainProgram` (including `TrainProgram.Global`) and `MainBoard.WriteLine` are a scripting API**, and users' saved projects contain code that calls them. Don't rename or remove public members or change their signatures. Add new members instead. The code editor's hard-coded autocomplete list (`FormCodeEditor.InitAutocomplete`) and its help text (`FormCodeEditor.resx`) must stay in sync with that API, because a stale entry inserts code that won't compile.
 
 ## Persistence and compatibility gotchas
 
